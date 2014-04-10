@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <template id="account" name="My Account">
+            <t t-call="website.layout">
+                <t t-set="head">
+                    <script type="text/javascript" src="/website_sale_my_account/static/src/js/website_account.js"></script>
+                    <t t-raw="head or ''"/>
+                </t>
+                <t t-set="additional_title">My Account</t>
+                <div class="container">
+
+                    <h3>My Sale Orders</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Total Price</th>
+                        </tr>
+                        <t t-foreach="sale_orders" t-as="sales_order">
+                        <tr t-attf-data-href="/account/sale-order/#{slug(sales_order)}/" class="row-hyperlink">
+                            <td><t t-esc="sales_order.name" /></td>
+                            <td><t t-esc="sales_order.date_order" /></td>
+                            <td><t t-esc="sales_order.state" /></td>
+                            <td><t t-esc="sales_order.amount_total" /></td>
+                        </tr>
+                        </t>
+                    </table>
+
+                    <h3>My Invoices</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                        <t t-foreach="invoices" t-as="invoice">
+                        <tr t-attf-data-href="/account/invoice/#{slug(invoice)}/" class="row-hyperlink">
+                            <td><t t-esc="invoice.name" /></td>
+                            <td><t t-esc="invoice.date_invoice" /></td>
+                            <td><t t-esc="invoice.state" /></td>
+                        </tr>
+                        </t>
+                    </table>
+
+                    <h3>My Deliveries</h3>
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Sales Order</th>
+                            <th>Fastest Expected Delivery Date</th>
+                            <th>Status</th>
+                        </tr>
+                        <t t-foreach="deliveries" t-as="delivery">
+                        <tr t-attf-data-href="/account/delivery/#{slug(delivery)}/" class="row-hyperlink">
+                            <td><t t-esc="delivery.origin" /></td>
+                            <td><t t-esc="delivery.min_date" /></td>
+                            <td><t t-esc="delivery.state" /></td>
+                        </tr>
+                        </t>
+                    </table>
+                </div>
+            </t>
+        </template>
+
+    </data>
+</openerp>
