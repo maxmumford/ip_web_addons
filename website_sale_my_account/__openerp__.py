@@ -13,8 +13,6 @@ More user friendly account view for customers. Display things like orders, invoi
     'data': [
         'data/website_account_data.xml', 
         'views/website_account_account.xml',
-        'views/website_account_sale_order.xml',
-        'views/website_account_invoice.xml',
     ],
     'installable': True,
 }

@@ -1,9 +1,10 @@
 $(document).ready(function () {
 
+    /*
     $('.row-hyperlink').click(function(){
         window.location = $(this).attr('data-href');
     });
-    /*
+    
 
     var $shippingDifferent = $(".oe_website_sale input[name='shipping_different']");
     if ($shippingDifferent.is(':checked')) {
