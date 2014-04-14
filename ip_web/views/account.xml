@@ -81,7 +81,7 @@
                                     <td class="action"><a class="btn btn-primary">Download</a></td>
                                 </tr>
                                 </t>
-                                <tr t-if="not len(deliveries)"><td class="table-empty" colspan="4">You don't have any deliveries</td></tr>
+                                <tr t-if="not len(deliveries)"><td class="table-empty" colspan="5">You don't have any deliveries</td></tr>
                             </table>
                         </div>
 

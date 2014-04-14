@@ -13,8 +13,8 @@ Also show quantity widget when adding products to basket
     'author': 'Max Mumford (OpenERP)',
     'depends': ['crm','sale','stock','website','website_sale', 'alpha_direct_services'],
     'data': [
-        'data/website_account_data.xml', 
-        'views/website_account_account.xml',
+        'data/menus.xml', 
+        'views/account.xml',
     ],
     'installable': True,
 }

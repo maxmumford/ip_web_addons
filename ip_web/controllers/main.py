@@ -7,24 +7,29 @@ from openerp.tools.translate import _
  
 class WebsiteSaleMyAccount(http.Controller):
 
-    @http.route(['/account/'], type='http', auth="user", multilang=True, website=True)
+    @http.route(['/account/'], type='http', auth="public", multilang=True, website=True)
     def account(self, **post):
-        cr, uid, context = request.cr, request.uid, request.context
-        invoices_obj = request.registry.get('account.invoice')
-        sale_obj = request.registry.get('sale.order')
-        delivery_obj = request.registry.get('stock.picking.out')
+        cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        user_obj = pool['res.users']
+        invoices_obj = pool['account.invoice']
+        sale_obj = pool['sale.order']
+        delivery_obj = pool['stock.picking.out']
+        
+        # get customer from logged in user
+        user = user_obj.browse(cr, 1, uid)
+        customer_id = user.partner_id.id
 
         # TODO: handle user company too?
         customer_invoice_ids = invoices_obj.search(cr, uid, [
-                ('user_id', '=', uid), 
+                ('partner_id.commercial_partner_id', '=', customer_id), 
                 ('type', '=', 'out_invoice'), 
                 ('state', 'in', ['open', 'paid'])
             ], context=context)
         customer_invoices = invoices_obj.browse(cr, uid, customer_invoice_ids, context=context)
         
         customer_sale_order_ids = sale_obj.search(cr, uid, [
-                ('user_id', '=', uid), 
-                ('state', 'not in', ['done', 'draft'])
+                ('partner_id.commercial_partner_id', '=', customer_id),
+                ('state', 'not in', ['draft'])
             ], context=context)
         customer_sale_orders = sale_obj.browse(cr, uid, customer_sale_order_ids, context=context)
 
