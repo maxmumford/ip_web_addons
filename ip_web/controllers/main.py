@@ -43,19 +43,19 @@ class WebsiteSaleMyAccount(http.Controller):
             'returns': [],
          }
 
-        return request.website.render("website_sale_my_account.account", vals)
+        return request.website.render("ip_web.account", vals)
 
     @http.route(['/account/sale-order/<model("sale.order"):sale_order>/'], type='http', auth="user", multilang=True, website=True)
     def sale_order(self, sale_order, **post):
         if sale_order.user_id != request.uid:
             request.redirect("/account/")
-        return request.website.render("website_sale_my_account.sale_order", {'sale_order': sale_order})
+        return request.website.render("ip_web.sale_order", {'sale_order': sale_order})
 
     @http.route(['/account/invoice/<model("account.invoice"):invoice>/'], type='http', auth="user", multilang=True, website=True)
     def invoice(self, invoice, **post):
         if invoice.user_id != request.uid:
             request.redirect("/account/")
-        return request.website.render("website_sale_my_account.invoice", {'invoice': invoice})
+        return request.website.render("ip_web.invoice", {'invoice': invoice})
 
     """ 
     Generate attachments for ids and return the PDF for user to download
