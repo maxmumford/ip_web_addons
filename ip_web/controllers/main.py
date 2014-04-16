@@ -14,38 +14,67 @@ class WebsiteSaleMyAccount(http.Controller):
         invoices_obj = pool['account.invoice']
         sale_obj = pool['sale.order']
         delivery_obj = pool['stock.picking.out']
+        incoming_obj = pool['stock.picking.in']
+        payment_obj = pool['payment.transaction']
         
         # get customer from logged in user
         user = user_obj.browse(cr, 1, uid)
-        customer_id = user.partner_id.id
+        partner_id = user.partner_id.id
+        
+        # if user is public user, redirect to login page
+        public_user_id = pool['website'].get_public_user(cr, 1)
+        if user.id == public_user_id:
+            return request.redirect("/web/login?redirect=/account/") 
+        
+        # get sales orders
+        sale_order_ids = sale_obj.search(cr, uid, [
+                ('partner_id.commercial_partner_id', '=', partner_id),
+                ('state', 'not in', ['draft', 'cancelled', 'invoice_except', 'shipping_except'])
+            ], context=context)
+        sale_orders = sale_obj.browse(cr, uid, sale_order_ids, context=context)
 
-        # TODO: handle user company too?
-        customer_invoice_ids = invoices_obj.search(cr, uid, [
-                ('partner_id.commercial_partner_id', '=', customer_id), 
+        # get invoices
+        invoice_ids = invoices_obj.search(cr, uid, [
+                ('partner_id.commercial_partner_id', '=', partner_id), 
                 ('type', '=', 'out_invoice'), 
                 ('state', 'in', ['open', 'paid'])
             ], context=context)
-        customer_invoices = invoices_obj.browse(cr, uid, customer_invoice_ids, context=context)
-        
-        customer_sale_order_ids = sale_obj.search(cr, uid, [
-                ('partner_id.commercial_partner_id', '=', customer_id),
-                ('state', 'not in', ['draft'])
-            ], context=context)
-        customer_sale_orders = sale_obj.browse(cr, uid, customer_sale_order_ids, context=context)
+        invoices = invoices_obj.browse(cr, uid, invoice_ids, context=context)
 
-        customer_delivery_ids = delivery_obj.search(cr, uid, [
+        # get delivery orders
+        delivery_ids = delivery_obj.search(cr, uid, [
                 ('type', '=', 'out'), 
-                ('sale_id', 'in', customer_sale_order_ids), 
+                ('sale_id', 'in', sale_order_ids), 
+                ('state', 'in', ['confirmed', 'assigned', 'done'])
             ], context=context)
-        customer_deliveries = delivery_obj.browse(cr, uid, customer_delivery_ids, context=context)
+        deliveries = delivery_obj.browse(cr, uid, delivery_ids, context=context)
+
+        # get auto ships
+        auto_ship_ids = sale_obj.search(cr, uid, [
+                ('partner_id.commercial_partner_id', '=', partner_id),
+                #('recurring', '=', True)
+            ], context=context)
+        auto_ships = sale_obj.browse(cr, uid, auto_ship_ids)
+        
+        # get transactions
+        transaction_ids = payment_obj.search(cr, uid, [('partner_id', '=', partner_id)])
+        transactions = payment_obj.browse(cr, uid, transaction_ids, context=context)
+        
+        # get returns
+        return_ids = incoming_obj.search(cr, uid, [
+                ('partner_id', '=', partner_id), 
+                ('type', '=', 'in'),
+                ('state', '!=', 'draft'),
+            ], context=context) 
+        returns = incoming_obj.browse(cr, uid, return_ids, context=context)
         
         vals = {
-            'invoices': customer_invoices,
-            'sale_orders': customer_sale_orders,
-            'deliveries': customer_deliveries,
-            'auto_ships': [],
-            'transactions': [],
-            'returns': [],
+            'invoices': invoices,
+            'sale_orders': sale_orders,
+            'deliveries': deliveries,
+            'auto_ships': auto_ships,
+            'transactions': transactions,
+            'returns': returns,
          }
 
         return request.website.render("ip_web.account", vals)
@@ -53,13 +82,13 @@ class WebsiteSaleMyAccount(http.Controller):
     @http.route(['/account/sale-order/<model("sale.order"):sale_order>/'], type='http', auth="user", multilang=True, website=True)
     def sale_order(self, sale_order, **post):
         if sale_order.user_id != request.uid:
-            request.redirect("/account/")
+            return request.redirect("/account/")
         return request.website.render("ip_web.sale_order", {'sale_order': sale_order})
 
     @http.route(['/account/invoice/<model("account.invoice"):invoice>/'], type='http', auth="user", multilang=True, website=True)
     def invoice(self, invoice, **post):
         if invoice.user_id != request.uid:
-            request.redirect("/account/")
+            return request.redirect("/account/")
         return request.website.render("ip_web.invoice", {'invoice': invoice})
 
     """ 

@@ -11,7 +11,7 @@ More user friendly account view for customers. Display things like orders, invoi
 Also show quantity widget when adding products to basket
         """,
     'author': 'Max Mumford (OpenERP)',
-    'depends': ['crm','sale','stock','website','website_sale', 'alpha_direct_services'],
+    'depends': ['crm','sale','stock','website','website_sale', 'payment'],
     'data': [
         'data/menus.xml', 
         'views/account.xml',

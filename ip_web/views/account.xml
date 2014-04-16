@@ -6,7 +6,7 @@
             <t t-call="website.layout">
                 <t t-set="head">
                     <link rel="stylesheet" href="/ip_web/static/src/css/account.css" />
-                    <script type="text/javascript" src="/ip_web/static/src/js/website_account.js"></script>
+                    <script type="text/javascript" src="/ip_web/static/src/js/account.js"></script>
                     <t t-raw="head or ''"/>
                 </t>
                 <t t-set="additional_title">My Account</t>
@@ -26,13 +26,13 @@
                             <h3>My Orders</h3>
                             <table class="table table-striped">
                                 <tr>
-                                    <th>Name</th>
+                                    <th>Order Reference</th>
                                     <th>Date</th>
                                     <th>Total Price</th>
                                     <th class="action">Download</th>
                                 </tr>
                                 <t t-foreach="sale_orders" t-as="sales_order">
-                                <tr class="row-hyperlink">
+                                <tr>
                                     <td><t t-esc="sales_order.name" /></td>
                                     <td><t t-esc="sales_order.date_order" /></td>
                                     <td><t t-esc="sales_order.amount_total" /></td>
@@ -47,13 +47,15 @@
                             <h3>My Invoices</h3>
                             <table class="table table-striped">
                                 <tr>
-                                    <th>Name</th>
+                                    <th>Invoice Reference</th>
+                                    <th>Order Reference</th>
                                     <th>Date</th>
                                     <th class="action">Download</th>
                                 </tr>
                                 <t t-foreach="invoices" t-as="invoice">
-                                <tr class="row-hyperlink">
-                                    <td><t t-esc="invoice.name" /></td>
+                                <tr>
+                                    <td><t t-esc="invoice.number" /></td>
+                                    <td><t t-esc="invoice.origin" /></td>
                                     <td><t t-esc="invoice.date_invoice" /></td>
                                     <td class="action"><a class="btn btn-primary" t-attf-href="/account/report/account.invoice/#{invoice.id}/account.invoice">Download</a></td>
                                 </tr>
@@ -73,12 +75,12 @@
                                     <th class="action">Download</th>
                                 </tr>
                                 <t t-foreach="deliveries" t-as="delivery">
-                                <tr class="row-hyperlink">
+                                <tr>
                                     <td><t t-esc="delivery.origin" /></td>
                                     <td><t t-esc="delivery.min_date" /></td>
                                     <td><t t-esc="delivery.state" /></td>
-                                    <td><t t-esc="delivery.tracking_number" /></td>
-                                    <td class="action"><a class="btn btn-primary">Download</a></td>
+                                    <td><t t-esc="delivery.carrier_tracking_ref" /></td>
+                                    <td class="action"><a class="btn btn-primary" t-attf-href="/account/report/stock.picking.out/#{delivery.id}/stock.picking.list.out">Download</a></td>
                                 </tr>
                                 </t>
                                 <tr t-if="not len(deliveries)"><td class="table-empty" colspan="5">You don't have any deliveries</td></tr>
@@ -99,7 +101,7 @@
                                     <th class="action"></th>
                                 </tr>
                                 <t t-foreach="auto_ships" t-as="auto_ship">
-                                <tr class="row-hyperlink">
+                                <tr>
                                     <td><t t-esc="auto_ship.name" /></td>
                                     <td><t t-esc="auto_ship.name" /></td>
                                     <td><t t-esc="auto_ship.name" /></td>
@@ -123,11 +125,19 @@
                             <h3>My Transactions</h3>
                             <table class="table table-striped">
                                 <tr>
-                                    <th>Name</th>
+                                    <th>Order Reference</th>
+                                    <th>Payment Method</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
                                 </tr>
                                 <t t-foreach="transactions" t-as="transaction">
-                                <tr class="row-hyperlink">
-                                    <td><t t-esc="return.name" /></td>
+                                <tr>
+                                    <td><t t-esc="transaction.reference" /></td>
+                                    <td><t t-esc="transaction.acquirer_id.name.title()" /></td>
+                                    <td><t t-esc="transaction.amount" /></td>
+                                    <td><t t-esc="transaction.date_create" /></td>
+                                    <td><t t-esc="transaction.state == 'pending' and 'Awaiting Payment' or transaction.state == 'done' and 'Paid' or transaction.state" /></td>
                                 </tr>
                                 </t>
                                 <tr t-if="not len(transactions)"><td class="table-empty" colspan="1">You haven't made any transactions</td></tr>
@@ -138,11 +148,17 @@
                             <h3>My Returns</h3>
                             <table class="table table-striped">
                                 <tr>
-                                    <th>Name</th>
+                                    <th>Return Reference</th>
+                                    <th>Related Order Reference</th>
+                                    <th>Date</th>
+                                    <th>Download</th>
                                 </tr>
-                                <t t-foreach="returns" t-as="return">
-                                <tr class="row-hyperlink">
-                                    <td><t t-esc="return.name" /></td>
+                                <t t-foreach="returns" t-as="ret">
+                                <tr>
+                                    <td><t t-esc="ret.name" /></td>
+                                    <td><t t-esc="ret.origin" /></td>
+                                    <td><t t-esc="ret.min_date" /></td>
+                                    <td class="action"><a class="btn btn-primary" t-attf-href="/account/report/stock.picking.in/#{ret.id}/stock.picking.list.in">Download</a></td>
                                 </tr>
                                 </t>
                                 <tr t-if="not len(returns)"><td class="table-empty" colspan="1">You haven't returned anything</td></tr>
