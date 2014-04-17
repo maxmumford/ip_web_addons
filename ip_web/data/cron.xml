@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data noupdate="1">
+
+        <record id="ip_web_auto_ship_cron" model="ir.cron">
+            <field name="name">IP Auto Ship Processing</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False" />
+            <field name="model" eval="'ads.manager'" />
+            <field name="function" eval="'poll'" />
+            <field name="args" eval="'()'" />
+        </record>
+
+    </data>
+</openerp>

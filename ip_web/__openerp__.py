@@ -16,7 +16,8 @@ Also show quantity widget when adding products to basket
     'depends': ['crm','sale','stock','website','website_sale', 'payment'],
     'data': [
         'data/menus.xml', 
-        'views/account.xml',
+        'account/views.xml',
+        'auto_ship/views.xml',
     ],
     'installable': True,
 }
