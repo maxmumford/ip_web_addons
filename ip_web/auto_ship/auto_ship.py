@@ -30,7 +30,7 @@ class auto_ship(osv.osv):
 
 		for auto_ship in self.browse(cr, uid, ids, context=context):
 			
-			if auto_ship.active and not auto_ship.expired:
+			if not auto_ship.expired:
 				# Get latest sales order and use that as base date
 				base_date = None
 				if auto_ship.latest_sale_order:
@@ -95,10 +95,9 @@ class auto_ship(osv.osv):
 
 	_columns = {
 		"name": fields.char("Name", required=True, readonly=True),
-		"active": fields.boolean("Active"),
 		"partner_id": fields.many2one("res.partner", "Customer", required=True),
-		"interval": fields.integer("Interval In Weeks", help="If auto_ship is true, this sales order will be resent every INTERVAL weeks", required=True),
-		"end_date": fields.date("Auto Ship End Date", help="The date that the Auto Ship expires", required=True),
+		"interval": fields.integer("Interval In Weeks", help="If auto_ship is true, this sales order will be resent every INTERVAL weeks"),
+		"end_date": fields.date("Auto Ship End Date", help="The date that the Auto Ship expires"),
 		"sale_order_ids": fields.one2many("sale.order", "auto_ship_id", "Sale Orders", help="Sale Orders created by this Auto Ship", readonly=True),
 		"latest_sale_order": fields.function(
 									_func_latest_sale_order,
@@ -134,7 +133,6 @@ class auto_ship(osv.osv):
 	
 	_defaults = {
 		'name': lambda obj, cr, uid, context: obj.pool['ir.sequence'].get(cr, uid, 'ip.auto_ship'),
-		'active': True,
 		'sale_order_ids': None,
 		'latest_sale_order': None,
 		'next_auto_ship_date': None,
@@ -143,20 +141,17 @@ class auto_ship(osv.osv):
 
 	# OE API
 	def write(self, cr, uid, ids, vals, context=None):
-		""" When updating [functional?] date column to None or False, the ORM leaves the old date instead, so force it manually """
+		""" 
+		When updating [functional?] date column to None or False, 
+		the ORM leaves the old date instead, so force it manually 
+		"""
 		super(auto_ship, self).write(cr, uid, ids, vals, context=context)
 		if 'next_auto_ship_date' in vals and (vals['next_auto_ship_date'] is None or vals['next_auto_ship_date'] is False):
 			cr.execute('UPDATE ip_auto_ship SET next_auto_ship_date = null where ids in %s', ids)
 			
-	def unlink(self, cr, uid, ids, context=None):
-		""" Set active to False instead of deleting """
-		self.write(cr, uid, ids, {'active': False})
-		return True
-	
 	def copy(self, cr, uid, id, default={}, context=None):
 		""" Get new 'name' value from sequence """
 		default['name'] = self.pool['ir.sequence'].get(cr, uid, 'ip.auto_ship')
-		default['active'] = True
 		default['sale_order_ids'] = None
 		default['latest_sale_order'] = None
 		default['next_auto_ship_date'] = None
@@ -173,7 +168,6 @@ class auto_ship(osv.osv):
 		auto_ship_ids = self.search(cr, uid, [
 			('next_auto_ship_date', '<=', today),
 			('expired', '=', False),
-			('active', '=', True),
 		])
 
 		# for each one call process_auto_ship
@@ -188,7 +182,7 @@ class auto_ship(osv.osv):
 		"""
 		# Check status of auto ship
 		auto_ship = self.browse(cr, uid, auto_ship_id, context=context)
-		if not auto_ship.active or auto_ship.expired:
+		if auto_ship.expired:
 			return False
 
 		# Duplicate latest sale order and confirm it
@@ -222,6 +216,9 @@ class auto_ship(osv.osv):
 		
 	def _calculate_number_remaining(self, interval, end_date):
 		""" Calculates the number of orders between now and the auto ship's end date """
+		assert isinstance(interval, (int, float)), "Interval must be an int or float"
+		assert isinstance(end_date, (bool, date, str, unicode)), "end_date must be str, unicode or date"
+		
 		if not interval or not end_date:
 			return 0
 		

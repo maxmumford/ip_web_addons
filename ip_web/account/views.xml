@@ -14,15 +14,15 @@
 
                     <div id="tabs">
                         <ul>
-                            <li><a href="#tabs-1">Orders</a></li>
-                            <li><a href="#tabs-2">Invoices</a></li>
-                            <li><a href="#tabs-3">Deliveries</a></li>
-                            <li><a href="#tabs-4">Auto Ships</a></li>
-                            <li><a href="#tabs-5">Transactions</a></li>
-                            <li><a href="#tabs-6">Returns</a></li>
+                            <li><a href="#orders">Orders</a></li>
+                            <li><a href="#invoices">Invoices</a></li>
+                            <li><a href="#deliveries">Deliveries</a></li>
+                            <li><a href="#auto-ships">Auto Ships</a></li>
+                            <li><a href="#transactions">Transactions</a></li>
+                            <li><a href="#returns">Returns</a></li>
                         </ul>
 
-                        <div id="tabs-1">
+                        <div id="orders">
                             <h3>My Orders</h3>
                             <table class="table table-striped">
                                 <tr>
@@ -43,8 +43,8 @@
                             </table>
                         </div>
 
-                        <div id="tabs-2">
-                            <h3>My Invoices</h3>
+                        <div id="invoices">
+                            <h3>Deliveries</h3>
                             <table class="table table-striped">
                                 <tr>
                                     <th>Invoice Reference</th>
@@ -64,7 +64,7 @@
                             </table>
                         </div>
 
-                        <div id="tabs-3">
+                        <div id="deliveries">
                             <h3>My Deliveries</h3>
                             <table class="table table-striped">
                                 <tr>
@@ -87,8 +87,8 @@
                             </table>
                         </div>
 
-                        <div id="tabs-4">
-                            <h3>My Auto-Ships</h3>
+                        <div id="auto-ships">
+                            <h3>Auto Ships</h3>
                             <table class="table table-striped">
                                 <tr>
                                     <th>Name</th>
@@ -101,26 +101,48 @@
                                     <th class="action"></th>
                                 </tr>
                                 <t t-foreach="auto_ships" t-as="auto_ship">
-                                <tr>
-                                    <td><t t-esc="auto_ship.name" /></td>
-                                    <td><t t-esc="auto_ship.interval" /></td>
-                                    <td><t t-esc="auto_ship.end_date" /></td>
-                                    <td><t t-esc="auto_ship.number_remaining" /></td>
-                                    <td><t t-esc="auto_ship.name" /></td>
-                                    <td><t t-esc="auto_ship.name" /></td>
-                                    <td><t t-esc="auto_ship.name" /></td>
-                                    <td class="action">
-                                        <a class="btn btn-primary">Update</a>
-                                        <br />
-                                        <a class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this auto-ship? You will no longer receive deliveries from it.')">Delete</a>
-                                    </td>
+                                <t t-set="first" t-value="True" />
+                                <t t-foreach="auto_ship.latest_sale_order.order_line" t-as="order_line">
+                                <tr t-attf-data-auto-ship-id="#{auto_ship.id}">
+                                	<t t-if="first == True">
+                                    	<td><t t-esc="auto_ship.name" /></td>
+                                    	<td>
+											<input type="text" class="interval" t-attf-value="#{auto_ship.interval}" />
+										</td>
+                                    	<td>
+                                    		<input type="text" class="end_date" t-attf-value="#{auto_ship.end_date}" />
+                            	       </td>
+                                    	<td class="number_remaining">
+                                            <t t-esc="auto_ship.number_remaining" />
+                                        </td>
+                                    	<td><t t-esc="order_line.product_id.name" /></td>
+                                    	<td><t t-esc="order_line.price_subtotal" /></td>
+	                                    <td><t t-esc="order_line.product_uom_qty" /></td>
+                                    	<td class="action">
+	                                        <a class="btn btn-primary update">Update</a>
+                                        	<br />
+                                        	<a class="btn btn-danger delete" onclick="return confirm('Are you sure you want to delete this auto-ship? You will no longer receive deliveries from it.')">Delete</a>
+                                    	</td>
+                                    </t>
+                                    <t t-if="first != True">
+                                    	<td></td>
+                                    	<td></td>
+                                    	<td></td>
+                                    	<td></td>
+                                    	<td><t t-esc="order_line.product_id.name" /></td>
+                                    	<td><t t-esc="order_line.price_subtotal" /></td>
+	                                    <td><t t-esc="order_line.product_uom_qty" /></td>
+                                    	<td></td>
+                                    </t>
+                                    <t t-set="first" t-value="False" />
                                 </tr>
                                 </t>
-                                <tr t-if="not len(auto_ships)"><td class="table-empty" colspan="9">You haven't setup any auto shipments</td></tr>
+                                </t>
+                                <tr t-if="not len(auto_ships)"><td class="table-empty" colspan="8">You haven't setup any auto shipments</td></tr>
                             </table>
                         </div>
 
-                        <div id="tabs-5">
+                        <div id="transactions">
                             <h3>My Transactions</h3>
                             <table class="table table-striped">
                                 <tr>
@@ -139,11 +161,11 @@
                                     <td><t t-esc="transaction.state == 'pending' and 'Awaiting Payment' or transaction.state == 'done' and 'Paid' or transaction.state" /></td>
                                 </tr>
                                 </t>
-                                <tr t-if="not len(transactions)"><td class="table-empty" colspan="1">You haven't made any transactions</td></tr>
+                                <tr t-if="not len(transactions)"><td class="table-empty" colspan="5">You haven't made any transactions</td></tr>
                             </table>
                         </div>
 
-                        <div id="tabs-6">
+                        <div id="returns">
                             <h3>My Returns</h3>
                             <table class="table table-striped">
                                 <tr>
@@ -160,7 +182,7 @@
                                     <td class="action"><a class="btn btn-primary" t-attf-href="/account/report/stock.picking.in/#{ret.id}/stock.picking.list.in">Download</a></td>
                                 </tr>
                                 </t>
-                                <tr t-if="not len(returns)"><td class="table-empty" colspan="1">You haven't returned anything</td></tr>
+                                <tr t-if="not len(returns)"><td class="table-empty" colspan="4">You haven't returned anything</td></tr>
                             </table>
                         </div>
 

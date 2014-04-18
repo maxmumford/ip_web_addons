@@ -7,6 +7,9 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
+            	<button name="action_cancel" position="after">
+            		<button type="object" name="button_create_auto_ship" string="Create Auto Ship" />
+            	</button>
             	<notebook position="inside">
             		<page string="Auto Ship">
                 		<group>

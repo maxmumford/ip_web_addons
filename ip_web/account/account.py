@@ -78,3 +78,31 @@ class IpMyAccount(http.Controller):
          }
 
         return request.website.render("ip_web.account", vals)
+    
+    @http.route(['/account/auto-ship/update/<int:auto_ship_id>'], type='http', auth="public", multilang=True, website=True)
+    def update_auto_ship(self, auto_ship_id, interval, end_date, **post):
+        """ Update an auto ship's interval and end date """
+        assert auto_ship_id and interval and end_date, "All variables are required to be truthy"
+        cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        # TODO: do we need to check permission?
+        pool['ip.auto_ship'].write(cr, uid, auto_ship_id, {'interval': interval, 'end_date': end_date})
+        return 'Your changes have been saved'
+    
+    @http.route(['/account/auto-ship/delete/<int:auto_ship_id>'], type='http', auth="public", multilang=True, website=True)
+    def delete_auto_ship(self, auto_ship_id, **post):
+        """ delete an auto ship """
+        assert auto_ship_id and isinstance(auto_ship_id, (int, long)), "Invalid auto ship ID"
+        cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        # TODO: do we need to check permission?
+        pool['ip.auto_ship'].unlink(cr, uid, auto_ship_id, context=context)
+        return 'true'
+
+    @http.route(['/account/number-remaining/<int:interval>/<end_date>'], type='http', auth="public", multilang=True, website=True)
+    def number_remaining(self, interval, end_date, **post):
+        """ Return the number of auto shipments remaining based on end_date and interval """
+        if not interval or not end_date:
+            return ''
+        try:
+            return str(request.registry['ip.auto_ship']._calculate_number_remaining(float(interval), end_date))
+        except:
+            return ''

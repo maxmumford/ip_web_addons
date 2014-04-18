@@ -9,7 +9,6 @@
             	<form string="Auto Ship" version="7.0">	
             		<group>
                 		<field name="name" />
-                		<field name="active" />
                 		<field name="expired" />
                 		<field name="partner_id" />
                 		<field name="interval" on_change="on_change_auto_ship_fields(interval, end_date)"  />
@@ -27,7 +26,7 @@
 		  	<field name="model">ip.auto_ship</field>
 		  	<field name="arch" type="xml">
 				<tree string="Stages">
-		        	<field name="active" />
+		        	<field name="name" />
 		        	<field name="expired" />
             		<field name="partner_id" />
 		        	<field name="interval" />

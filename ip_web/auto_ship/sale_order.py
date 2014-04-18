@@ -9,13 +9,20 @@ class sale_order(osv.osv):
 		"auto_ship_id": fields.many2one("ip.auto_ship", "Auto Ship"),
 	}
 	
-	def create_auto_ship(self, cr, uid, so_id, interval, end_date, context=None):
+	def button_create_auto_ship(self, cr, uid, ids, context=None):
+		assert len(ids) == 1, 'Can only create an auto ship for one SO at a time'
+		so = self.browse(cr, uid, ids[0], context=context)
+		self.create_auto_ship(cr, uid, so.id, context=context)
+	
+	def create_auto_ship(self, cr, uid, so_id, interval=0, end_date=None, context=None):
 		""" Create an auto ship for a sale order """
 		assert isinstance(so_id, (int, long)), _("so_id variable should be int or long")
-		assert interval and end_date, _("interval and end_date variables are both required and must be truthy")
 		
 		auto_ship_obj = self.pool['ip.auto_ship']
 		so = self.browse(cr, uid, so_id)
+		
+		if so.auto_ship_id:
+			raise osv.except_osv(_("Auto Ship Already Exists"), _("An Auto Ship already exists for this sale order. Look in the Auto Ship tab."))
 		
 		auto_ship_vals = {
 			'interval': interval,
