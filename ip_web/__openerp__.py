@@ -13,11 +13,17 @@ Add auto shipment functionality to sales order.
 Also show quantity widget when adding products to basket
         """,
     'author': 'Max Mumford (OpenERP)',
-    'depends': ['crm','sale','stock','website','website_sale', 'payment'],
+    'depends': ['crm','sale','stock', 'delivery', 'website','website_sale', 'payment'],
     'data': [
-        'data/menus.xml', 
+        'account/menus.xml',
+        'auto_ship/menus.xml', 
+        
         'account/views.xml',
-        'auto_ship/views.xml',
+        'auto_ship/auto_ship_views.xml',
+        'auto_ship/sale_order_views.xml',
+
+        'auto_ship/sequence.xml',
+        'data/cron.xml',
     ],
     'installable': True,
 }

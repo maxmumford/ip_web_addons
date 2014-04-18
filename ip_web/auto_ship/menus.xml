@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data noupdate="1">
+
+         <record model="ir.actions.act_window" id="action_auto_ship">
+			  <field name="name">Auto Ships</field>
+			  <field name="res_model">ip.auto_ship</field>
+			  <field name="view_type">form</field>
+		</record>
+        
+        <menuitem id="menu_auto_ship"
+            action="action_auto_ship" 
+            parent="base.menu_sales"
+            sequence="10" />
+
+    </data>
+</openerp>

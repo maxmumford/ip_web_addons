@@ -103,10 +103,9 @@
                                 <t t-foreach="auto_ships" t-as="auto_ship">
                                 <tr>
                                     <td><t t-esc="auto_ship.name" /></td>
-                                    <td><t t-esc="auto_ship.name" /></td>
-                                    <td><t t-esc="auto_ship.name" /></td>
-                                    <td><t t-esc="auto_ship.name" /></td>
-                                    <td><t t-esc="auto_ship.name" /></td>
+                                    <td><t t-esc="auto_ship.interval" /></td>
+                                    <td><t t-esc="auto_ship.end_date" /></td>
+                                    <td><t t-esc="auto_ship.number_remaining" /></td>
                                     <td><t t-esc="auto_ship.name" /></td>
                                     <td><t t-esc="auto_ship.name" /></td>
                                     <td><t t-esc="auto_ship.name" /></td>

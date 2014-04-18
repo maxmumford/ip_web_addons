@@ -8,8 +8,8 @@
             <field name="interval_type">days</field>
             <field name="numbercall">-1</field>
             <field name="doall" eval="False" />
-            <field name="model" eval="'ads.manager'" />
-            <field name="function" eval="'poll'" />
+            <field name="model" eval="'ip.auto_ship'" />
+            <field name="function" eval="'do_all_auto_ships'" />
             <field name="args" eval="'()'" />
         </record>
 

@@ -13,10 +13,11 @@ class IpMyAccount(http.Controller):
         user_obj = pool['res.users']
         invoices_obj = pool['account.invoice']
         sale_obj = pool['sale.order']
+        auto_ship_obj = pool['ip.auto_ship']
         delivery_obj = pool['stock.picking.out']
         incoming_obj = pool['stock.picking.in']
         payment_obj = pool['payment.transaction']
-        
+
         # get customer from logged in user
         user = user_obj.browse(cr, 1, uid)
         partner_id = user.partner_id.id
@@ -50,11 +51,10 @@ class IpMyAccount(http.Controller):
         deliveries = delivery_obj.browse(cr, uid, delivery_ids, context=context)
 
         # get auto ships
-        auto_ship_ids = sale_obj.search(cr, uid, [
-                ('partner_id.commercial_partner_id', '=', partner_id),
-                #('recurring', '=', True)
+        auto_ship_ids = auto_ship_obj.search(cr, uid, [
+                ('partner_id', '=', partner_id),
             ], context=context)
-        auto_ships = sale_obj.browse(cr, uid, auto_ship_ids)
+        auto_ships = auto_ship_obj.browse(cr, uid, auto_ship_ids)
         
         # get transactions
         transaction_ids = payment_obj.search(cr, uid, [('partner_id', '=', partner_id)])
