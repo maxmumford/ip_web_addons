@@ -168,7 +168,7 @@ class auto_ship(osv.osv):
 		""" Called by a cron to find all auto ships that should be processed and call process_auto_ship on them """
 		# get ids for auto ships whose next_auto_ship_date is in the past or today, end_date is in the future 
 		today = date.today().strftime('%Y-%m-%d')
-		today = date(2015, 5, 30) # used to debug
+		#today = date(2015, 5, 30) # used to debug
 		
 		auto_ship_ids = self.search(cr, uid, [
 			('next_auto_ship_date', '<=', today),
