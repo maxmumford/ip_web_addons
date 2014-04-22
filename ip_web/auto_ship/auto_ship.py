@@ -66,6 +66,16 @@ class auto_ship(osv.osv):
 		for auto_ship in self.browse(cr, uid, ids, context=context):
 			res[auto_ship.id] = self._calculate_number_remaining(auto_ship.interval, auto_ship.end_date)
 		return res
+	
+	def _func_valid_products(self, cr, uid, ids, field_name=None, arg=None, context=None):
+		""" Check that all products in the latest sale order line are auto shippable """
+		res = dict.fromkeys(ids, None)
+		for auto_ship in self.browse(cr, uid, ids, context=context):
+			if not auto_ship.latest_sale_order:
+				res[auto_ship.id] = False
+			else:
+				res[auto_ship.id] = all([line.product_id.auto_ship for line in auto_ship.latest_sale_order.order_line])
+		return res
 
 	# On change functions
 	def on_change_auto_ship_fields(self, cr, uid, ids, interval, end_date, context=None):
@@ -129,6 +139,13 @@ class auto_ship(osv.osv):
 									type = "char",
 									help = "The number of orders remaining between now and the end date",
 		),
+		"valid_products": fields.function(
+									_func_valid_products,
+									method = True,
+									string = "Valid Products",
+									type = "boolean",
+									help = "Returns true if all products on the latest sale order are auto shippable",
+		),
 	}
 	
 	_defaults = {
@@ -149,14 +166,14 @@ class auto_ship(osv.osv):
 		if 'next_auto_ship_date' in vals and (vals['next_auto_ship_date'] is None or vals['next_auto_ship_date'] is False):
 			cr.execute('UPDATE ip_auto_ship SET next_auto_ship_date = null where ids in %s', ids)
 			
-	def copy(self, cr, uid, id, default={}, context=None):
+	def copy(self, cr, uid, as_id, default={}, context=None):
 		""" Get new 'name' value from sequence """
 		default['name'] = self.pool['ir.sequence'].get(cr, uid, 'ip.auto_ship')
 		default['sale_order_ids'] = None
 		default['latest_sale_order'] = None
 		default['next_auto_ship_date'] = None
 		default['expired'] = False
-		return super(auto_ship, self).copy(cr, uid, id, default=default, context=context)
+		return super(auto_ship, self).copy(cr, uid, as_id, default=default, context=context)
 
 	# Public methods
 	def do_all_auto_ships(self, cr, uid):
@@ -182,7 +199,7 @@ class auto_ship(osv.osv):
 		"""
 		# Check status of auto ship
 		auto_ship = self.browse(cr, uid, auto_ship_id, context=context)
-		if auto_ship.expired:
+		if auto_ship.expired or not auto_ship.valid_products:
 			return False
 
 		# Duplicate latest sale order and confirm it

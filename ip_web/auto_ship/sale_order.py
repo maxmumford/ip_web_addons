@@ -1,6 +1,9 @@
 from openerp.osv import osv, fields
 from openerp.tools.translate import _
 
+EXISTING_AUTO_SHIP = 'Existing Auto Ship'
+INVALID_PRODUCTS = 'Invalid Products'
+
 class sale_order(osv.osv):
 
 	_inherit = "sale.order"
@@ -10,9 +13,19 @@ class sale_order(osv.osv):
 	}
 	
 	def button_create_auto_ship(self, cr, uid, ids, context=None):
+		""" Form view button for creating an auto ship from a sales order """
 		assert len(ids) == 1, 'Can only create an auto ship for one SO at a time'
 		so = self.browse(cr, uid, ids[0], context=context)
-		self.create_auto_ship(cr, uid, so.id, context=context)
+		
+		try:
+			self.create_auto_ship(cr, uid, so.id, context=context)
+		except ValueError as v:
+			
+			if v.message == EXISTING_AUTO_SHIP:
+				raise osv.except_osv(_("Auto Ship Already Exists"), _("An Auto Ship already exists for this sale order. Look in the Auto Ship tab."))
+			
+			elif v.message == INVALID_PRODUCTS:
+				raise osv.except_osv(_("Invalid Products"), _("Not all products in the sale order lines are marked as Auto Shippable"))
 	
 	def create_auto_ship(self, cr, uid, so_id, interval=0, end_date=None, context=None):
 		""" Create an auto ship for a sale order """
@@ -20,9 +33,14 @@ class sale_order(osv.osv):
 		
 		auto_ship_obj = self.pool['ip.auto_ship']
 		so = self.browse(cr, uid, so_id)
-		
+
+		# check no existing auto ship exists for this SO		
 		if so.auto_ship_id:
-			raise osv.except_osv(_("Auto Ship Already Exists"), _("An Auto Ship already exists for this sale order. Look in the Auto Ship tab."))
+			raise ValueError(EXISTING_AUTO_SHIP)
+		
+		# check all products in all sales order lines are auto shippable
+		if not all([line.product_id.auto_ship for line in so.order_line]):
+			raise ValueError(INVALID_PRODUCTS)
 		
 		auto_ship_vals = {
 			'interval': interval,
