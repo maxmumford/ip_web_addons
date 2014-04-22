@@ -15,15 +15,15 @@ Also show quantity widget when adding products to basket
     'author': 'Max Mumford (OpenERP)',
     'depends': ['crm','sale','stock', 'delivery', 'website','website_sale', 'payment'],
     'data': [
-        'account/menus.xml',
-        'auto_ship/menus.xml', 
+        'auto_ship/data/cron.xml',
+        'account/data/menus.xml',
+        'auto_ship/data/menus.xml', 
+        'auto_ship/data/sequence.xml',
         
-        'account/views.xml',
-        'auto_ship/auto_ship_views.xml',
-        'auto_ship/sale_order_views.xml',
-
-        'auto_ship/sequence.xml',
-        'data/cron.xml',
+        'account/views/account.xml',
+        'auto_ship/views/auto_ship.xml',
+        'auto_ship/views/sale_order.xml',
+        'auto_ship/views/product.xml',
     ],
     'installable': True,
 }

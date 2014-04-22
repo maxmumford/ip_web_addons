@@ -83,7 +83,7 @@ class IpMyAccount(http.Controller):
     def update_auto_ship(self, auto_ship_id, interval, end_date, **post):
         """ Update an auto ship's interval and end date """
         assert auto_ship_id and interval and end_date, "All variables are required to be truthy"
-        cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        cr, uid, pool = request.cr, request.uid, request.registry
         # TODO: do we need to check permission?
         pool['ip.auto_ship'].write(cr, uid, auto_ship_id, {'interval': interval, 'end_date': end_date})
         return 'Your changes have been saved'
