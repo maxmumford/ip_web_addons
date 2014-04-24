@@ -11,12 +11,12 @@ class auto_ship(osv.osv):
 
 	# functional field triggers
 	def next_ship_sale_order_trigger(self, cr, uid, ids, context=None):
-		r = [so.auto_ship_id.id for so in self.browse(cr, uid, ids, context=context)]
+		r = [so.auto_ship_id.id for so in self.pool['sale.order'].browse(cr, uid, ids, context=context)]
 		return r
 	
 	_next_auto_ship_date_store_triggers = {
 		'ip.auto_ship': (lambda self, cr, uid, ids, context=None: ids, ['interval', 'end_date'], 5),
-		'sale.order': (next_ship_sale_order_trigger, ['auto_ship_id'], 5),
+		'sale.order': (next_ship_sale_order_trigger, ['auto_ship_id'], 6),
 	}
 
 	_expired_store_triggers = {
@@ -65,7 +65,7 @@ class auto_ship(osv.osv):
 		""" Calculate the number of orders remaining between now and the end_date """
 		res = dict.fromkeys(ids, None)
 		for auto_ship in self.browse(cr, uid, ids, context=context):
-			res[auto_ship.id] = self._calculate_number_remaining(auto_ship.interval, auto_ship.end_date)
+			res[auto_ship.id] = self._calculate_number_remaining(auto_ship.interval, auto_ship.end_date, auto_ship.latest_sale_order.date_order)
 		return res
 	
 	def _func_valid_products(self, cr, uid, ids, field_name=None, arg=None, context=None):
@@ -84,8 +84,8 @@ class auto_ship(osv.osv):
 		if not interval or not end_date:
 			return {
 				'value': {
-					'next_auto_ship_date': None,
-					'number_remaining': None,
+					'next_auto_ship_date': '',
+					'number_remaining': '',
 				}
 			}
 		elif ids:
@@ -93,8 +93,8 @@ class auto_ship(osv.osv):
 			
 			auto_ship = self.browse(cr, uid, ids[0])
 			next_auto_ship_date = self._calculate_next_auto_ship_date(auto_ship.latest_sale_order.date_order, interval, return_type = str)
-			number_remaining = self._calculate_number_remaining(interval, end_date)
-
+			number_remaining = self._calculate_number_remaining(interval, end_date, auto_ship.latest_sale_order.date_order)
+			
 			return {
 				'value': {
 					'next_auto_ship_date': next_auto_ship_date,
@@ -111,7 +111,7 @@ class auto_ship(osv.osv):
 		"end_date": fields.date("Auto Ship End Date", help="The date that the Auto Ship expires"),
 		"sale_order_ids": fields.one2many("sale.order", "auto_ship_id", "Sale Orders", help="Sale Orders created by this Auto Ship", readonly=True),
 		"error": fields.boolean("Error", help="Error will be true if there was a problem while processing the Auto Ship"),
-		"error_messages": fields.text("error_messages", readonly=True),
+		"error_messages": fields.text("Error Messages", readonly=True),
 		"latest_sale_order": fields.function(
 									_func_latest_sale_order,
 									method = True,
@@ -165,9 +165,10 @@ class auto_ship(osv.osv):
 		When updating [functional?] date column to None or False, 
 		the ORM leaves the old date instead, so force it manually 
 		"""
-		super(auto_ship, self).write(cr, uid, ids, vals, context=context)
-		if 'next_auto_ship_date' in vals and (vals['next_auto_ship_date'] is None or vals['next_auto_ship_date'] is False):
+		res = super(auto_ship, self).write(cr, uid, ids, vals, context=context)
+		if 'next_auto_ship_date' in vals and not vals['next_auto_ship_date']:
 			cr.execute('UPDATE ip_auto_ship SET next_auto_ship_date = null where ids in %s', ids)
+		return res
 			
 	def copy(self, cr, uid, as_id, default={}, context=None):
 		""" Get new 'name' value from sequence """
@@ -251,7 +252,7 @@ class auto_ship(osv.osv):
 		else:
 			return next_date.strftime('%Y-%m-%d')
 		
-	def _calculate_number_remaining(self, interval, end_date):
+	def _calculate_number_remaining(self, interval, end_date, start_date=None):
 		""" Calculates the number of orders between now and the auto ship's end date """
 		assert isinstance(interval, (int, float)), "Interval must be an int or float"
 		assert isinstance(end_date, (bool, date, str, unicode)), "end_date must be str, unicode or date"
@@ -259,8 +260,14 @@ class auto_ship(osv.osv):
 		if not interval or not end_date:
 			return 0
 		
+		if not start_date:
+			start_date = date.today()
+		
 		if isinstance(end_date, (str, unicode)):
 			end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+		
+		if isinstance(start_date, (str, unicode)):
+			start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
 
-		difference = date.today() - end_date
+		difference = start_date - end_date
 		return math.trunc(abs(difference.days) / (interval * 7.0))
