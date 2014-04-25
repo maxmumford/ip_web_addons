@@ -2,8 +2,8 @@
 <openerp>
     <data>
 
-        <record id="ip_web_sale_order_form" model="ir.ui.view">
-            <field name="name">sale.order.form.ip_web</field>
+        <record id="ip_web_addons_sale_order_form" model="ir.ui.view">
+            <field name="name">sale.order.form.ip_web_addons</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">

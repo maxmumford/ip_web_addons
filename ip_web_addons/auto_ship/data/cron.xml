@@ -2,7 +2,7 @@
 <openerp>
     <data noupdate="1">
 
-        <record id="ip_web_auto_ship_cron" model="ir.cron">
+        <record id="ip_web_addons_auto_ship_cron" model="ir.cron">
             <field name="name">IP Auto Ship Processing</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>

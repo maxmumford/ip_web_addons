@@ -1,5 +1,5 @@
 {
-    'name': 'IP Web',
+    'name': 'IP Web Addons',
     'category': 'Website',
     'summary': 'Customer portal, auto shipments and product ordering changes',
     'version': '1.0',

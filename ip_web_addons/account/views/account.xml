@@ -5,8 +5,8 @@
         <template id="account" name="My Account">
             <t t-call="website.layout">
                 <t t-set="head">
-                    <link rel="stylesheet" href="/ip_web/static/src/css/account.css" />
-                    <script type="text/javascript" src="/ip_web/static/src/js/account.js"></script>
+                    <link rel="stylesheet" href="/ip_web_addons/static/src/css/account.css" />
+                    <script type="text/javascript" src="/ip_web_addons/static/src/js/account.js"></script>
                     <t t-raw="head or ''"/>
                 </t>
                 <t t-set="additional_title">My Account</t>

@@ -77,7 +77,7 @@ class IpMyAccount(http.Controller):
             'returns': returns,
          }
 
-        return request.website.render("ip_web.account", vals)
+        return request.website.render("ip_web_addons.account", vals)
     
     @http.route(['/account/auto-ship/update/<int:auto_ship_id>'], type='http', auth="public", multilang=True, website=True)
     def update_auto_ship(self, auto_ship_id, interval, end_date, **post):
