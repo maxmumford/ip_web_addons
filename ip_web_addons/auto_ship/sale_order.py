@@ -10,7 +10,20 @@ class sale_order(osv.osv):
 
 	_columns = {
 		"auto_ship_id": fields.many2one("ip.auto_ship", "Auto Ship"),
+		
+		'draft_auto_ship': fields.boolean('To Create Auto Ship?', help="Indicates whether or not an Auto Ship should be created when this sale order is confirmed"),
+		'draft_auto_ship_interval': fields.integer('Auto Ship Interval', help="The interval of the auto ship to be created"),
+		'draft_auto_ship_end_date': fields.date('Auto Ship Date', help="The end date of the Auto to be created")
 	}
+	
+	def action_button_confirm(self, cr, uid, ids, context=None):
+		""" Override action_button_confirm to create auto_ship if necessary on SO confirmation """
+		res = super(sale_order, self).action_button_confirm(cr, uid, ids, context=context)
+		order = self.browse(cr, uid, ids[0], context=context)
+		if order.draft_auto_ship and not order.auto_ship_id:
+			self.create_auto_ship(cr, uid, order.id, order.draft_auto_ship_interval, order.draft_auto_ship_end_date, context=context)
+			order.write({'draft_auto_ship': False, 'draft_auto_ship_interval': 0, 'draft_auto_ship_end_date': None})
+		return res
 	
 	def button_create_auto_ship(self, cr, uid, ids, context=None):
 		""" Form view button for creating an auto ship from a sales order """
