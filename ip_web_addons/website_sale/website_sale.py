@@ -27,3 +27,14 @@ class Ecommerce(http.Controller):
 				number=quantity - new_quantity,
 				context=request.context)
 		return 'true'
+	
+	@http.route(['/shop/can_auto_ship/'], type='http', auth="public", methods=['POST', 'GET'], website=True, multilang=True)
+	def can_auto_ship(self):
+		"""
+		Returns 'true' if all products in the cart are auto shippable, otherwise returns 'false' 
+		"""
+		order = request.registry['website'].ecommerce_get_current_order(request.cr, request.uid, context=request.context)
+		for line in order.order_line:
+			if not line.product_id.auto_ship:
+				return 'false'
+		return 'true'
