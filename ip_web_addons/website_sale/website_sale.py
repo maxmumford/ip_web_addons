@@ -1,3 +1,5 @@
+import json
+
 from openerp.addons.web import http
 from openerp.addons.web.http import request
 from openerp.tools.translate import _
@@ -30,6 +32,22 @@ class Ecommerce(http.Controller):
 				number=quantity - new_quantity,
 				context=request.context)
 		return 'true'
+		
+	@http.route(['/shop/get_cart_product_quantities/'], type='http', auth="public", methods=['POST', 'GET'], website=True, multilang=True)
+	def get_cart_product_quantities(self):
+		"""
+		Get the IDS and quantities of products in the cart
+		@return json object where keys are ids and values are quantities 
+		"""
+		order = request.registry['website'].ecommerce_get_current_order(request.cr, request.uid, context=request.context)
+		if not order:
+			return 'false: no order'
+		
+		product_quantites = dict([(line.product_id.id, 0) for line in order.order_line])
+		for line in order.order_line:
+			product_quantites[line.product_id.id] += line.product_uos_qty
+		
+		return json.dumps(product_quantites)
 
 	@http.route(['/shop/set_auto_ship/'], type='http', auth="public", methods=['POST'], website=True, multilang=True)
 	def set_auto_ship(self, auto_ship, interval=0, end_date=None):
@@ -83,7 +101,7 @@ class Ecommerce(http.Controller):
 		
 		auto_ship = 'true' if order.draft_auto_ship else 'false'
 		interval = order.draft_auto_ship_interval
-		end_date = order.draft_auto_ship_end_date or 'null' 
+		end_date = order.draft_auto_ship_end_date or 'null'
 		
 		return """{
 			"auto_ship": "%s",
