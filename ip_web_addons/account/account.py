@@ -7,8 +7,8 @@ from openerp.tools.translate import _
  
 class IpMyAccount(http.Controller):
 
-    @http.route(['/account/'], type='http', auth="public", multilang=True, website=True)
-    def account(self, **post):
+    @http.route(['/account/', '/account/<page>'], type='http', auth="public", multilang=True, website=True)
+    def account(self, page=None, **post):
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
         user_obj = pool['res.users']
         invoices_obj = pool['account.invoice']
@@ -69,6 +69,7 @@ class IpMyAccount(http.Controller):
         returns = incoming_obj.browse(cr, uid, return_ids, context=context)
         
         vals = {
+            'page': page,
             'invoices': invoices,
             'sale_orders': sale_orders,
             'deliveries': deliveries,
