@@ -121,7 +121,7 @@
                                     	<td class="action">
 	                                        <a class="btn btn-primary update">Update</a>
                                         	<br />
-                                        	<a class="btn btn-danger delete" onclick="return confirm('Are you sure you want to delete this auto-ship? You will no longer receive deliveries from it.')">Delete</a>
+                                        	<a class="btn btn-danger delete">Delete</a>
                                     	</td>
                                     </t>
                                     <t t-if="first != True">

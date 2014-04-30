@@ -14,21 +14,17 @@ $(document).ready(function () {
     	var end_date = $('*[data-auto-ship-id="' + auto_ship_id + '"] .end_date').val();
     	var elem_number_remaining = $('*[data-auto-ship-id="' + auto_ship_id + '"] .number_remaining');
 
-    	// validate
-    	interval = $.isNumeric(interval) ? interval : 0;
-    	end_date = end_date.length > 0 ? end_date : null;
-
-    	if(interval < 1 || end_date == null) {
-    		elem_number_remaining.html('');
-    		return;
-    	}
-
     	// make ajax call to calculate number remaining
     	$.ajax({
-		    url: "/account/number-remaining/" + interval + '/' + end_date
-		}).done(function(number_remaining) {
-	    	// set number remaining field
-	    	elem_number_remaining.html(number_remaining);
+		    url: "/account/number-remaining/" + interval + '/' + end_date,
+            dataType: 'JSON',
+		}).done(function(response) {
+	    	if(response.status == "fail")
+                elem_number_remaining.html('');
+            else if(response.status == "success")
+                elem_number_remaining.html(response.data.number_remaining);
+            else if(response.status == "error")
+	    	    elem_number_remaining.html('');
 		});
     });
 
@@ -40,24 +36,21 @@ $(document).ready(function () {
     	var interval = $('*[data-auto-ship-id="' + auto_ship_id + '"] .interval').val();
     	var end_date = $('*[data-auto-ship-id="' + auto_ship_id + '"] .end_date').val();
 
-    	// validate
-    	interval = $.isNumeric(interval) ? interval : 0;
-    	end_date = end_date.length > 0 ? end_date : null;
-
-    	if(interval < 1 || end_date == null) {
-    		elem_number_remaining.html('');
-    		return;
-    	}
-
     	// send update 
     	$.ajax({
 		    url: "/account/auto-ship/update/" + auto_ship_id,
 		    type: 'POST',
+            dataType: 'json',
 		    data: {interval: interval, end_date: end_date},
 		}).done(function(response) {
-	    	alert(response);
+	    	if(response.status == "fail")
+                alert("The field " + Object.keys(response.data)[0] + " has a problem: " + response.data[Object.keys(response.data)[0]]);
+            else if(response.status == "success")
+                alert("Saved successfully");
+            else if(response.status == "error")
+                alert(response.message);
 		}).fail(function(request, response){
-			alert("There was an error while saving - please check the form fields");
+			alert("There was a problem with the request");
 		});
     });
 
