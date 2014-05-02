@@ -30,45 +30,45 @@ class IpMyAccount(http.Controller):
             return request.redirect("/web/login?redirect=/account/") 
         
         # get sales orders
-        sale_order_ids = sale_obj.search(cr, uid, [
+        sale_order_ids = sale_obj.search(cr, 1, [
                 ('partner_id.commercial_partner_id', '=', partner_id),
                 ('state', 'not in', ['draft', 'cancelled', 'invoice_except', 'shipping_except'])
             ], context=context)
         sale_orders = sale_obj.browse(cr, uid, sale_order_ids, context=context)
 
         # get invoices
-        invoice_ids = invoices_obj.search(cr, uid, [
+        invoice_ids = invoices_obj.search(cr, 1, [
                 ('partner_id.commercial_partner_id', '=', partner_id), 
                 ('type', '=', 'out_invoice'), 
                 ('state', 'in', ['open', 'paid'])
             ], context=context)
-        invoices = invoices_obj.browse(cr, uid, invoice_ids, context=context)
+        invoices = invoices_obj.browse(cr, 1, invoice_ids, context=context)
 
         # get delivery orders
-        delivery_ids = delivery_obj.search(cr, uid, [
+        delivery_ids = delivery_obj.search(cr, 1, [
                 ('type', '=', 'out'), 
                 ('sale_id', 'in', sale_order_ids), 
                 ('state', 'in', ['confirmed', 'assigned', 'done'])
             ], context=context)
-        deliveries = delivery_obj.browse(cr, uid, delivery_ids, context=context)
+        deliveries = delivery_obj.browse(cr, 1, delivery_ids, context=context)
 
         # get auto ships
-        auto_ship_ids = auto_ship_obj.search(cr, uid, [
+        auto_ship_ids = auto_ship_obj.search(cr, 1, [
                 ('partner_id', '=', partner_id),
             ], context=context)
-        auto_ships = auto_ship_obj.browse(cr, uid, auto_ship_ids)
+        auto_ships = auto_ship_obj.browse(cr, 1, auto_ship_ids)
         
         # get transactions
-        transaction_ids = payment_obj.search(cr, uid, [('partner_id', '=', partner_id)])
-        transactions = payment_obj.browse(cr, uid, transaction_ids, context=context)
+        transaction_ids = payment_obj.search(cr, 1, [('partner_id', '=', partner_id)])
+        transactions = payment_obj.browse(cr, 1, transaction_ids, context=context)
         
         # get returns
-        return_ids = incoming_obj.search(cr, uid, [
+        return_ids = incoming_obj.search(cr, 1, [
                 ('partner_id', '=', partner_id), 
                 ('type', '=', 'in'),
                 ('state', '!=', 'draft'),
             ], context=context) 
-        returns = incoming_obj.browse(cr, uid, return_ids, context=context)
+        returns = incoming_obj.browse(cr, 1, return_ids, context=context)
         
         vals = {
             'page': page,
