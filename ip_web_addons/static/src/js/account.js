@@ -2,7 +2,10 @@ $(document).ready(function () {
 
 	// instantiate jquery ui tabs widget
     $(function() {
-        $( "#tabs" ).tabs();
+        if(jQuery.ui != undefined)
+            $( "#tabs" ).tabs();
+        else
+            console.log("jQuery is not loaded so cannot setup tabs");
     });
 
     // set on_change for interval and end_date fields

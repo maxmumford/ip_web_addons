@@ -86,6 +86,8 @@ class Ecommerce(http.Controller):
 		vals = {}
 		
 		if auto_ship:
+			if not end_date:
+				return jsend.jsend_fail({'end_date', 'End Date must have a value'})
 			try:
 				end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
 			except ValueError:
