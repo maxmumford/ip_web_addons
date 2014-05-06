@@ -17,9 +17,11 @@
                     <t t-set="address" t-value="address_billing" />
                     <t t-call="ip_web_addons.update_address" />
 
-                    <h2>Shipping Addresses</h2>
-                    <t t-foreach="addresses_shipping or []" t-as="address">
-                    	<t t-call="ip_web_addons.update_address" />
+                    <t t-if="addresses_shipping or []">
+                        <h2>Shipping Addresses</h2>
+                        <t t-foreach="addresses_shipping or []" t-as="address">
+                        	<t t-call="ip_web_addons.update_address" />
+                        </t>
                     </t>
                     
                 </div>
