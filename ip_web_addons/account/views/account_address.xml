@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <template id="address" name="My Adresses">
+            <t t-call="website.layout">
+                <t t-set="head">
+                    <link rel="stylesheet" href="/ip_web_addons/static/src/css/account_address.css" />
+                    <script type="text/javascript" src="/ip_web_addons/static/src/js/account_address.js"></script>
+                    <script type="text/javascript" src="/ip_web_addons/static/src/js/jquery.serialize-object.js"></script>
+                    <t t-raw="head or ''"/>
+                </t>
+                <t t-set="additional_title">My Adresses</t>
+                <div class="container">
+
+                    <h2>Billing Address</h2>
+                    <t t-set="address" t-value="address_billing" />
+                    <t t-call="ip_web_addons.update_address" />
+
+                    <h2>Shipping Addresses</h2>
+                    <t t-foreach="addresses_shipping or []" t-as="address">
+                    	<t t-call="ip_web_addons.update_address" />
+                    </t>
+                    
+                </div>
+            </t>
+        </template>
+
+        <template id="update_address" name="Update Address">
+            <div class="update-address">
+                <form>
+                    <input type="hidden" name="id" t-att-value="address.id" />
+                    <table>
+                        <tr>
+                            <td>Name</td>
+                            <td><input type="text" name="name" t-att-value="address.name" /></td>
+                        </tr>
+                        <tr>
+                            <td>Street</td>
+                            <td><input type="text" name="street" t-att-value="address.street" /></td>
+                        </tr>
+                        <tr>
+                            <td>Street2</td>
+                            <td><input type="text" name="street2" t-att-value="address.street2" /></td>
+                        </tr>
+                        <tr>
+                            <td>City</td>
+                            <td><input type="text" name="city" t-att-value="address.city" /></td>
+                        </tr>
+                        <tr>
+                            <td>State</td>
+                            <td class="form-group">
+                                <select name="state_id" class="form-control">
+                                    <option value="">Select...</option>
+                                    <t t-foreach="states or []" t-as="state">
+                                        <option t-att-value="state.id" t-att-selected="state.id == address.state_id">
+                                            <t t-esc="state.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Zip</td>
+                            <td><input type="text" name="zip" t-att-value="address.zip" /></td>
+                        </tr>
+                        <tr>
+                            <td>Country</td>
+                            <td class="form-group">
+                                <select name="country_id" class="form-control">
+                                    <option value="">Select...</option>
+                                    <t t-foreach="countries or []" t-as="country">
+                                        <option t-att-value="country.id" t-att-selected="country.id == address.country_id">
+                                            <t t-esc="country.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                    <button type="button" class="address-submit">Save</button>
+                </form>
+            </div>
+        </template>
+
+    </data>
+</openerp>

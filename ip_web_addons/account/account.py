@@ -1,14 +1,32 @@
 # -*- coding: utf-8 -*-
+from functools import wraps
+from .. import jsend, tools
+
 from openerp import SUPERUSER_ID
 from openerp.addons.web import http
 from openerp.addons.web.http import request
 from openerp.addons.website.models import website
 from openerp.tools.translate import _
 
-from .. import jsend, tools
+class PartnerAddress(object):
+    """ Object representing a partner address for use in qweb """
+    def __init__(self, partner):
+        super(PartnerAddress, self).__init__()
+
+        self.id = partner.id
+        self.name = partner.name
+        self.street = partner.street
+        self.street2 = partner.street2
+        self.city = partner.city
+        self.state = partner.state_id.name
+        self.state_id = partner.state_id.id
+        self.zip = partner.zip
+        self.country = partner.country_id.name
+        self.country_id = partner.country_id.id
 
 class IpMyAccount(http.Controller):
 
+    @tools.require_login
     @http.route(['/account/', '/account/<page>'], type='http', auth="public", multilang=True, website=True)
     def account(self, page=None, **post):
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
@@ -21,54 +39,49 @@ class IpMyAccount(http.Controller):
         payment_obj = pool['payment.transaction']
 
         # get customer from logged in user
-        user = user_obj.browse(cr, 1, uid)
+        user = user_obj.browse(cr, SUPERUSER_ID, uid)
         partner_id = user.partner_id.id
         
-        # if user is public user, redirect to login page
-        public_user_id = pool['website'].get_public_user(cr, 1)
-        if user.id == public_user_id:
-            return request.redirect("/web/login?redirect=/account/") 
-        
         # get sales orders
-        sale_order_ids = sale_obj.search(cr, 1, [
+        sale_order_ids = sale_obj.search(cr, SUPERUSER_ID, [
                 ('partner_id.commercial_partner_id', '=', partner_id),
                 ('state', 'not in', ['draft', 'cancelled', 'invoice_except', 'shipping_except'])
             ], context=context)
         sale_orders = sale_obj.browse(cr, uid, sale_order_ids, context=context)
 
         # get invoices
-        invoice_ids = invoices_obj.search(cr, 1, [
+        invoice_ids = invoices_obj.search(cr, SUPERUSER_ID, [
                 ('partner_id.commercial_partner_id', '=', partner_id), 
                 ('type', '=', 'out_invoice'), 
                 ('state', 'in', ['open', 'paid'])
             ], context=context)
-        invoices = invoices_obj.browse(cr, 1, invoice_ids, context=context)
+        invoices = invoices_obj.browse(cr, SUPERUSER_ID, invoice_ids, context=context)
 
         # get delivery orders
-        delivery_ids = delivery_obj.search(cr, 1, [
+        delivery_ids = delivery_obj.search(cr, SUPERUSER_ID, [
                 ('type', '=', 'out'), 
                 ('sale_id', 'in', sale_order_ids), 
                 ('state', 'in', ['confirmed', 'assigned', 'done'])
             ], context=context)
-        deliveries = delivery_obj.browse(cr, 1, delivery_ids, context=context)
+        deliveries = delivery_obj.browse(cr, SUPERUSER_ID, delivery_ids, context=context)
 
         # get auto ships
-        auto_ship_ids = auto_ship_obj.search(cr, 1, [
+        auto_ship_ids = auto_ship_obj.search(cr, SUPERUSER_ID, [
                 ('partner_id', '=', partner_id),
             ], context=context)
-        auto_ships = auto_ship_obj.browse(cr, 1, auto_ship_ids)
+        auto_ships = auto_ship_obj.browse(cr, SUPERUSER_ID, auto_ship_ids)
         
         # get transactions
-        transaction_ids = payment_obj.search(cr, 1, [('partner_id', '=', partner_id)])
-        transactions = payment_obj.browse(cr, 1, transaction_ids, context=context)
+        transaction_ids = payment_obj.search(cr, SUPERUSER_ID, [('partner_id', '=', partner_id)])
+        transactions = payment_obj.browse(cr, SUPERUSER_ID, transaction_ids, context=context)
         
         # get returns
-        return_ids = incoming_obj.search(cr, 1, [
+        return_ids = incoming_obj.search(cr, SUPERUSER_ID, [
                 ('partner_id', '=', partner_id), 
                 ('type', '=', 'in'),
                 ('state', '!=', 'draft'),
             ], context=context) 
-        returns = incoming_obj.browse(cr, 1, return_ids, context=context)
+        returns = incoming_obj.browse(cr, SUPERUSER_ID, return_ids, context=context)
         
         vals = {
             'page': page,
@@ -82,6 +95,90 @@ class IpMyAccount(http.Controller):
 
         return request.website.render("ip_web_addons.account", vals)
     
+    @tools.require_login
+    @http.route(['/account/address'], type='http', auth="public", multilang=True, website=True)
+    def address(self):
+        """
+        Allows the logged in user to edit their invoice address and shipping address(es).
+        The invoice address is either the user's partner itself, or their parent if it exists.
+        The shipping addresses can be that of the partner, and any of the partners who share 
+        the same parent_id. 
+        """
+        cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        user_obj = pool['res.users']
+        partner_obj = pool['res.partner']
+        country_obj = pool['res.country']
+        state_obj = pool['res.country.state']
+
+        # get customer from logged in user
+        user = user_obj.browse(cr, SUPERUSER_ID, uid, context=context)
+        partner = partner_obj.browse(cr, SUPERUSER_ID, user.partner_id.id, context=context)
+        
+        # get addresses
+        addresses_shipping = []
+        parent = partner
+        children = []
+        
+        if partner.child_ids:
+            # partner is a parent so use it as billing and children as shipping
+            parent = partner
+            children += parent.child_ids
+        elif partner.parent_id:
+            # partner is child so use it's parent as billing and siblings as children
+            parent = partner.parent_id
+            children_ids = partner_obj.search(cr, SUPERUSER_ID, [('parent_id', '=', partner.parent_id.id)], context=context)
+            children += [child for child in partner_obj.browse(cr, SUPERUSER_ID, children_ids, context=context)]
+        
+        address_billing = PartnerAddress(partner)
+        map(lambda child: addresses_shipping.append(PartnerAddress(child)), children)
+        
+        # get countries and states
+        country_ids = country_obj.search(cr, SUPERUSER_ID, [], context=context)
+        states_ids = state_obj.search(cr, SUPERUSER_ID, [], context=context)
+        
+        countries = country_obj.browse(cr, SUPERUSER_ID, country_ids, context)
+        states = state_obj.browse(cr, SUPERUSER_ID, states_ids, context)
+
+        vals = {
+            'countries': countries,
+            'states': states,
+            'address_billing': address_billing,
+            'addresses_shipping': addresses_shipping,
+        }
+        
+        return request.website.render("ip_web_addons.address", vals)
+    
+    @tools.require_login_jsend
+    @jsend.jsend_error_catcher
+    @http.route(['/account/address/update'], type='http', methods=['POST'], auth="public", multilang=True, website=True)
+    def update_address(self, name, street, street2, city, zip, state_id, country_id, id):
+        """ JSON route to update the address fields on a partner """
+        if not tools.isnumeric(id):
+            return jsend.jsend_fail({'id': 'Partner ID must be a number'})
+        else:
+            id = int(id)
+        
+        cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        partner_obj = pool['res.partner']
+        partner_id = id
+        # TODO: make sure user has permission to update partner object
+        partner_exists = bool(partner_obj.search(cr, SUPERUSER_ID, [('id', '=', partner_id)], context=context))
+        
+        if not partner_exists:
+            return jsend.jsend_fail({'partner_id', 'That partner does not exist'})
+        
+        vals = {
+            'name': name,
+            'street': street,
+            'street2': street2,
+            'city': city,
+            'zip': zip,
+            'state_id': state_id,
+            'country_id': country_id,
+        }
+        partner_obj.write(cr, SUPERUSER_ID, [partner_id], vals)
+    
+    @tools.require_login_jsend
     @jsend.jsend_error_catcher
     @http.route(['/account/auto-ship/update/<int:auto_ship_id>'], type='http', auth="public", multilang=True, website=True)
     def update_auto_ship(self, auto_ship_id, interval, end_date, **post):
@@ -105,6 +202,7 @@ class IpMyAccount(http.Controller):
         # TODO: do we need to check permission?
         pool['ip.auto_ship'].write(cr, uid, auto_ship_id, {'interval': interval, 'end_date': end_date})
     
+    @tools.require_login_jsend
     @jsend.jsend_error_catcher
     @http.route(['/account/auto-ship/delete/auto_ship_id'], type='http', auth="public", multilang=True, website=True)
     def delete_auto_ship(self, auto_ship_id, **post):
@@ -118,6 +216,7 @@ class IpMyAccount(http.Controller):
         # TODO: do we need to check permission?
         pool['ip.auto_ship'].unlink(cr, uid, auto_ship_id, context=context)
         
+    @tools.require_login_jsend
     @jsend.jsend_error_catcher
     @http.route(['/account/number-remaining/<interval>/<end_date>'], type='http', auth="public", multilang=True, website=True)
     def number_remaining(self, interval, end_date, **post):

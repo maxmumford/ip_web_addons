@@ -17,10 +17,13 @@ Also show quantity widget when adding products to basket
     'data': [
         'auto_ship/data/cron.xml',
         'account/data/menus.xml',
+        
         'auto_ship/data/menus.xml', 
         'auto_ship/data/sequence.xml',
         
         'account/views/account.xml',
+        'account/views/account_address.xml',
+        
         'auto_ship/views/auto_ship.xml',
         'auto_ship/views/sale_order.xml',
         'auto_ship/views/product.xml',

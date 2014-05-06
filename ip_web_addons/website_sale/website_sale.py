@@ -44,6 +44,7 @@ class Ecommerce(http.Controller):
 				
 		return self.get_cart_info()
 		
+	@tools.require_login_jsend
 	@jsend.jsend_error_catcher
 	@http.route(['/shop/get_cart_info/'], type='http', auth="public", website=True, multilang=True)
 	def get_cart_info(self):
@@ -64,7 +65,8 @@ class Ecommerce(http.Controller):
 			'product_count': order.get_number_of_products()
 		}
 		return jsend.jsend_success(vals)
-
+	
+	@tools.require_login_jsend
 	@jsend.jsend_error_catcher
 	@http.route(['/shop/set_auto_ship/'], type='http', auth="public", methods=['POST'], website=True, multilang=True)
 	def set_auto_ship(self, auto_ship, interval=0, end_date=None):
@@ -102,7 +104,8 @@ class Ecommerce(http.Controller):
 			vals['draft_auto_ship_end_date'] = None
 			
 		order.write(vals)
-	
+		
+	@tools.require_login_jsend
 	@jsend.jsend_error_catcher
 	@http.route(['/shop/get_auto_ship/'], type='http', auth="public", website=True, multilang=True)
 	def get_auto_ship(self):
@@ -122,7 +125,8 @@ class Ecommerce(http.Controller):
 									'interval': interval,
 									'end_date': end_date,
 								})
-
+	
+	@tools.require_login_jsend
 	@jsend.jsend_error_catcher
 	@http.route(['/shop/can_auto_ship/'], type='http', auth="public", website=True, multilang=True)
 	def can_auto_ship(self):
