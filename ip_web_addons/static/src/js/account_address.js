@@ -3,7 +3,6 @@ $(document).ready(function () {
 	$('.address-submit').click(function(){
 		var form = $(this).closest('form');
 		var data = form.serializeObject();
-		data['state_id'] = -1;
 
     	$.ajax({
 		    url: "/account/address/update",
