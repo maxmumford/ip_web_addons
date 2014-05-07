@@ -11,6 +11,9 @@
 	                <field name="auto_ship"/>
                     <label for="auto_ship"/>
                 </label>
+                <field name="standard_price" position="after">
+                	<field name="box_quantity" />
+                </field>
             </field>
         </record>
         
