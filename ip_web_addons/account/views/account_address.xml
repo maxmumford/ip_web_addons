@@ -1,26 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
-
-        <template id="address" name="My Adresses">
+    
+    	<template id="address" name="My Addresses">
             <t t-call="website.layout">
                 <t t-set="head">
                     <link rel="stylesheet" href="/ip_web_addons/static/src/css/account_address.css" />
-                    <script type="text/javascript" src="/ip_web_addons/static/src/js/account_address.js"></script>
-                    <script type="text/javascript" src="/ip_web_addons/static/src/js/jquery.serialize-object.js"></script>
                     <t t-raw="head or ''"/>
                 </t>
-                <t t-set="additional_title">My Adresses</t>
+                <t t-set="additional_title">My Addresses</t>
                 <div class="container">
 
                     <h2>Billing Address</h2>
                     <t t-set="address" t-value="address_billing" />
-                    <t t-call="ip_web_addons.update_address" />
+                    <t t-call="ip_web_addons.address_edit_view" />
 
                     <t t-if="addresses_shipping or []">
                         <h2>Shipping Addresses</h2>
                         <t t-foreach="addresses_shipping or []" t-as="address">
-                        	<t t-call="ip_web_addons.update_address" />
+                        	<t t-call="ip_web_addons.address_edit_view" />
                         </t>
                     </t>
                     
@@ -28,9 +26,84 @@
             </t>
         </template>
 
-        <template id="update_address" name="Update Address">
+        <template id="address_edit" name="Edit My Addresses">
+            <t t-call="website.layout">
+                <t t-set="head">
+                    <link rel="stylesheet" href="/ip_web_addons/static/src/css/account_address.css" />
+                    <script type="text/javascript" src="/ip_web_addons/static/src/js/account_address.js"></script>
+                    <script type="text/javascript" src="/ip_web_addons/static/src/js/jquery.serialize-object.js"></script>
+                    <t t-raw="head or ''"/>
+                </t>
+                <t t-set="additional_title">My Addresses</t>
+                <div class="container">
+
+                    <h2>Billing Address</h2>
+                    <t t-set="address" t-value="address_billing" />
+                    <t t-call="ip_web_addons.address_edit_form" />
+
+                    <t t-if="addresses_shipping or []">
+                        <h2>Shipping Addresses</h2>
+                        <t t-foreach="addresses_shipping or []" t-as="address">
+                        	<t t-call="ip_web_addons.address_edit_form" />
+                        </t>
+                    </t>
+                    
+                </div>
+            </t>
+        </template>
+
+        <template id="address_edit_view" name="View Address">
             <div class="update-address">
-                <form>
+                <input type="hidden" name="id" t-att-value="address.id" />
+                <table>
+                    <tr>
+                        <td>Name</td>
+                        <td><t t-esc="address.name" /></td>
+                    </tr>
+                    <tr>
+                        <td>Street</td>
+                        <td><t t-esc="address.street" /></td>
+                    </tr>
+                    <tr>
+                        <td>Street2</td>
+                        <td><t t-esc="address.street2" /></td>
+                    </tr>
+                    <tr>
+                        <td>City</td>
+                        <td><t t-esc="address.city" /></td>
+                    </tr>
+                    <tr>
+                        <td>State</td>
+                        <td>
+                            <t t-foreach="states or []" t-as="state">
+                                <t t-if="state.id == address.state_id">
+                                    <t t-esc="state.name"/>
+                                </t>
+                            </t>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Zip</td>
+                        <td><t t-esc="address.zip" /></td>
+                    </tr>
+                    <tr>
+                        <td>Country</td>
+                        <td>
+                            <t t-foreach="countries or []" t-as="country">
+                                <t t-if="country.id == address.country_id">
+                                    <t t-esc="country.name"/>
+                                </t>
+                            </t>
+                        </td>
+                    </tr>
+                </table>
+                <button type="button" onclick="window.location.href = '/account/address/edit';">Edit</button>
+            </div>
+        </template>
+        
+        <template id="address_edit_form" name="Update Address">
+            <div class="update-address">
+                <form>                
                     <input type="hidden" name="id" t-att-value="address.id" />
                     <table>
                         <tr>

@@ -61,6 +61,7 @@ def jsend_error_catcher(func):
         except JsendTypeError as e:
             return jsend_fail({e.field_name: e.message})
         except Exception as e:
+            print traceback.format_exc()
             data = {
                 "type": type(e).__name__,
                 "message": unicode(e),

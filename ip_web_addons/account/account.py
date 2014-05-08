@@ -95,14 +95,18 @@ class IpMyAccount(http.Controller):
 
         return request.website.render("ip_web_addons.account", vals)
     
-    @tools.require_login
-    @http.route(['/account/address'], type='http', auth="public", multilang=True, website=True)
-    def address(self):
+    def get_addresses(self):
         """
-        Allows the logged in user to edit their invoice address and shipping address(es).
-        The invoice address is either the user's partner itself, or their parent if it exists.
-        The shipping addresses can be that of the partner, and any of the partners who share 
-        the same parent_id. 
+        Returns the below dict containing all cities, all countries, and the requestor's billing
+        and shipping addresses. address_shipping can be an empty list. address_billing will always
+        have at least one record. 
+        
+        {
+            cities: [browse_record, browse_record, ... ],
+            countries: [browse_record, browse_record, ... ],
+            address_billing: PartnerAddress,
+            address_shipping: [PartnerAddress, PartnerAddress, .. ]
+        }
         """
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
         user_obj = pool['res.users']
@@ -139,14 +143,36 @@ class IpMyAccount(http.Controller):
         countries = country_obj.browse(cr, SUPERUSER_ID, country_ids, context)
         states = state_obj.browse(cr, SUPERUSER_ID, states_ids, context)
 
-        vals = {
+        return {
             'countries': countries,
             'states': states,
             'address_billing': address_billing,
             'addresses_shipping': addresses_shipping,
         }
-        
+    
+    @tools.require_login
+    @http.route(['/account/address'], type='http', auth="public", multilang=True, website=True)
+    def address(self):
+        """
+        Allows the logged in user to view their invoice address and shipping address[es].
+        The invoice address is either the user's partner itself, or their parent if it exists.
+        The shipping addresses can be that of the partner, and any of the partners who share 
+        the same parent_id. 
+        """
+        vals = self.get_addresses()
         return request.website.render("ip_web_addons.address", vals)
+    
+    @tools.require_login
+    @http.route(['/account/address/edit'], type='http', auth="public", multilang=True, website=True)
+    def address_edit(self):
+        """
+        Allows the logged in user to edit their invoice address and shipping address(es).
+        The invoice address is either the user's partner itself, or their parent if it exists.
+        The shipping addresses can be that of the partner, and any of the partners who share 
+        the same parent_id. 
+        """
+        vals = self.get_addresses()
+        return request.website.render("ip_web_addons.address_edit", vals)
     
     @tools.require_login_jsend
     @jsend.jsend_error_catcher
@@ -157,6 +183,15 @@ class IpMyAccount(http.Controller):
             return jsend.jsend_fail({'id': 'Partner ID must be a number'})
         else:
             id = int(id)
+            
+        if not name:
+            return jsend.jsend_fail({'name': 'Name is a required field'})    
+        if not street:
+            return jsend.jsend_fail({'street': 'Street is a required field'})    
+        if not city:
+            return jsend.jsend_fail({'city': 'City is a required field'})
+        if not country_id:
+            return jsend.jsend_fail({'country_id': 'Country is a required field'})
         
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
         partner_obj = pool['res.partner']
