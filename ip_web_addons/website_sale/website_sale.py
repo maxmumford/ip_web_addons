@@ -44,7 +44,6 @@ class Ecommerce(http.Controller):
 				
 		return self.get_cart_info()
 		
-	@tools.require_login_jsend
 	@jsend.jsend_error_catcher
 	@http.route(['/shop/get_cart_info/'], type='http', auth="public", website=True, multilang=True)
 	def get_cart_info(self):

@@ -12,13 +12,13 @@
                 <div class="container">
 
                     <h2>Billing Address</h2>
-                    <t t-set="address" t-value="address_billing" />
-                    <t t-call="ip_web_addons.address_edit_view" />
+                    <t t-set="partner" t-value="partner_billing" />
+                    <t t-call="ip_web_addons.partner_address_view_form" />
 
-                    <t t-if="addresses_shipping or []">
+                    <t t-if="partners_shipping or []">
                         <h2>Shipping Addresses</h2>
-                        <t t-foreach="addresses_shipping or []" t-as="address">
-                        	<t t-call="ip_web_addons.address_edit_view" />
+                        <t t-foreach="partners_shipping or []" t-as="partner">
+                        	<t t-call="ip_web_addons.partner_address_view_form" />
                         </t>
                     </t>
                     
@@ -30,21 +30,22 @@
             <t t-call="website.layout">
                 <t t-set="head">
                     <link rel="stylesheet" href="/ip_web_addons/static/src/css/account_address.css" />
-                    <script type="text/javascript" src="/ip_web_addons/static/src/js/account_address.js"></script>
                     <script type="text/javascript" src="/ip_web_addons/static/src/js/jquery.serialize-object.js"></script>
+                    <script type="text/javascript" src="/ip_web_addons/static/src/js/jquery.select2.js"></script>
+                    <script type="text/javascript" src="/ip_web_addons/static/src/js/account_address.js"></script>
                     <t t-raw="head or ''"/>
                 </t>
                 <t t-set="additional_title">My Addresses</t>
                 <div class="container">
 
                     <h2>Billing Address</h2>
-                    <t t-set="address" t-value="address_billing" />
-                    <t t-call="ip_web_addons.address_edit_form" />
+                    <t t-set="partner" t-value="partner_billing" />
+                    <t t-call="ip_web_addons.partner_address_edit_form" />
 
-                    <t t-if="addresses_shipping or []">
+                    <t t-if="partners_shipping or []">
                         <h2>Shipping Addresses</h2>
-                        <t t-foreach="addresses_shipping or []" t-as="address">
-                        	<t t-call="ip_web_addons.address_edit_form" />
+                        <t t-foreach="partners_shipping or []" t-as="partner">
+                        	<t t-call="ip_web_addons.partner_address_edit_form" />
                         </t>
                     </t>
                     
@@ -52,31 +53,45 @@
             </t>
         </template>
 
-        <template id="address_edit_view" name="View Address">
+        <template id="partner_address_view_form" name="View Address">
             <div class="update-address">
-                <input type="hidden" name="id" t-att-value="address.id" />
+                <input type="hidden" name="id" t-att-value="partner.id" />
                 <table>
                     <tr>
                         <td>Name</td>
-                        <td><t t-esc="address.name" /></td>
+                        <td><t t-esc="partner.name" /></td>
+                    </tr>
+                    <tr>
+                        <td>Title</td>
+                        <td>
+                            <t t-foreach="titles or []" t-as="title">
+                                <t t-if="title.id == partner.title.id">
+                                    <t t-esc="title.name"/>
+                                </t>
+                            </t>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Gender</td>
+                        <td><t t-esc="partner.gender" /></td>
                     </tr>
                     <tr>
                         <td>Street</td>
-                        <td><t t-esc="address.street" /></td>
+                        <td><t t-esc="partner.street" /></td>
                     </tr>
                     <tr>
                         <td>Street2</td>
-                        <td><t t-esc="address.street2" /></td>
+                        <td><t t-esc="partner.street2" /></td>
                     </tr>
                     <tr>
                         <td>City</td>
-                        <td><t t-esc="address.city" /></td>
+                        <td><t t-esc="partner.city" /></td>
                     </tr>
                     <tr>
                         <td>State</td>
                         <td>
                             <t t-foreach="states or []" t-as="state">
-                                <t t-if="state.id == address.state_id">
+                                <t t-if="state.id == partner.state_id.id">
                                     <t t-esc="state.name"/>
                                 </t>
                             </t>
@@ -84,13 +99,13 @@
                     </tr>
                     <tr>
                         <td>Zip</td>
-                        <td><t t-esc="address.zip" /></td>
+                        <td><t t-esc="partner.zip" /></td>
                     </tr>
                     <tr>
                         <td>Country</td>
                         <td>
                             <t t-foreach="countries or []" t-as="country">
-                                <t t-if="country.id == address.country_id">
+                                <t t-if="country.id == partner.country_id.id">
                                     <t t-esc="country.name"/>
                                 </t>
                             </t>
@@ -101,26 +116,69 @@
             </div>
         </template>
         
-        <template id="address_edit_form" name="Update Address">
+        <template id="partner_address_edit_form" name="Update Address">
             <div class="update-address">
                 <form>                
-                    <input type="hidden" name="id" t-att-value="address.id" />
+                    <input type="hidden" name="id" t-att-value="partner.id" />
                     <table>
                         <tr>
                             <td>Name</td>
-                            <td><input type="text" name="name" t-att-value="address.name" /></td>
+                            <td><input type="text" name="name" t-att-value="partner.name" /></td>
+                        </tr>
+                        <tr>
+                            <td>Title</td>
+                            <td class="form-group">
+                                <select name="title" class="form-control">
+                                    <option value="">Select...</option>
+                                    <t t-foreach="titles or []" t-as="title">
+                                        <option t-att-value="title.id" t-att-selected="title.id == partner.title.id">
+                                            <t t-esc="title.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Gender</td>
+                            <td class="form-group">
+                                <select name="gender" class="form-control">
+                                    <option value="">Select...</option>
+                                    <option value="m" t-att-selected="partner.gender == 'm'">Male</option>
+                                    <option value="f" t-att-selected="partner.gender == 'f'">Female</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Date of Birth</td>
+                            <td><input type="text" name="birthdate" t-att-value="partner.birthdate" /></td>
+                        </tr>
+                        <tr>
+                            <td>Diseases</td>
+                            <td>
+                                <select multiple="true" class="select2" name="category_id" style="width: 400px">
+                                    <t t-foreach="categories or []" t-as="category">
+                                        <option t-att-value="category.id" 
+                                                t-att-selected="category.id in [categ.id for categ in partner.category_id]">
+                                            <t t-esc="category.name" />
+                                        </option>
+                                    </t>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><hr /></td>
                         </tr>
                         <tr>
                             <td>Street</td>
-                            <td><input type="text" name="street" t-att-value="address.street" /></td>
+                            <td><input type="text" name="street" t-att-value="partner.street" /></td>
                         </tr>
                         <tr>
                             <td>Street2</td>
-                            <td><input type="text" name="street2" t-att-value="address.street2" /></td>
+                            <td><input type="text" name="street2" t-att-value="partner.street2" /></td>
                         </tr>
                         <tr>
                             <td>City</td>
-                            <td><input type="text" name="city" t-att-value="address.city" /></td>
+                            <td><input type="text" name="city" t-att-value="partner.city" /></td>
                         </tr>
                         <tr>
                             <td>State</td>
@@ -128,7 +186,7 @@
                                 <select name="state_id" class="form-control">
                                     <option value="">Select...</option>
                                     <t t-foreach="states or []" t-as="state">
-                                        <option t-att-value="state.id" t-att-selected="state.id == address.state_id">
+                                        <option t-att-value="state.id" t-att-selected="state.id == partner.state_id.id">
                                             <t t-esc="state.name"/>
                                         </option>
                                     </t>
@@ -137,7 +195,7 @@
                         </tr>
                         <tr>
                             <td>Zip</td>
-                            <td><input type="text" name="zip" t-att-value="address.zip" /></td>
+                            <td><input type="text" name="zip" t-att-value="partner.zip" /></td>
                         </tr>
                         <tr>
                             <td>Country</td>
@@ -145,7 +203,7 @@
                                 <select name="country_id" class="form-control">
                                     <option value="">Select...</option>
                                     <t t-foreach="countries or []" t-as="country">
-                                        <option t-att-value="country.id" t-att-selected="country.id == address.country_id">
+                                        <option t-att-value="country.id" t-att-selected="country.id == partner.country_id.id">
                                             <t t-esc="country.name"/>
                                         </option>
                                     </t>

@@ -1,28 +1,13 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
 from .. import jsend, tools
+from datetime import datetime
 
 from openerp import SUPERUSER_ID
 from openerp.addons.web import http
 from openerp.addons.web.http import request
 from openerp.addons.website.models import website
 from openerp.tools.translate import _
-
-class PartnerAddress(object):
-    """ Object representing a partner address for use in qweb """
-    def __init__(self, partner):
-        super(PartnerAddress, self).__init__()
-
-        self.id = partner.id
-        self.name = partner.name
-        self.street = partner.street
-        self.street2 = partner.street2
-        self.city = partner.city
-        self.state = partner.state_id.name
-        self.state_id = partner.state_id.id
-        self.zip = partner.zip
-        self.country = partner.country_id.name
-        self.country_id = partner.country_id.id
 
 class IpMyAccount(http.Controller):
 
@@ -95,17 +80,18 @@ class IpMyAccount(http.Controller):
 
         return request.website.render("ip_web_addons.account", vals)
     
-    def get_addresses(self):
+    def get_address_partners(self):
         """
         Returns the below dict containing all cities, all countries, and the requestor's billing
-        and shipping addresses. address_shipping can be an empty list. address_billing will always
+        and shipping addresses. address_shipping can be an empty list. partner_billing will always
         have at least one record. 
         
         {
+            titles: [browse_record, browse_record, ... ],
             cities: [browse_record, browse_record, ... ],
             countries: [browse_record, browse_record, ... ],
-            address_billing: PartnerAddress,
-            address_shipping: [PartnerAddress, PartnerAddress, .. ]
+            partner_billing: browse_record,
+            address_shipping: [browse_record, browse_record, .. ]
         }
         """
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
@@ -113,13 +99,15 @@ class IpMyAccount(http.Controller):
         partner_obj = pool['res.partner']
         country_obj = pool['res.country']
         state_obj = pool['res.country.state']
+        title_obj = pool['res.partner.title']
+        category_obj = pool['res.partner.category']
 
         # get customer from logged in user
         user = user_obj.browse(cr, SUPERUSER_ID, uid, context=context)
         partner = partner_obj.browse(cr, SUPERUSER_ID, user.partner_id.id, context=context)
         
         # get addresses
-        addresses_shipping = []
+        partners_shipping = []
         parent = partner
         children = []
         
@@ -133,21 +121,28 @@ class IpMyAccount(http.Controller):
             children_ids = partner_obj.search(cr, SUPERUSER_ID, [('parent_id', '=', partner.parent_id.id)], context=context)
             children += [child for child in partner_obj.browse(cr, SUPERUSER_ID, children_ids, context=context)]
         
-        address_billing = PartnerAddress(partner)
-        map(lambda child: addresses_shipping.append(PartnerAddress(child)), children)
+        partner_billing = partner
+        map(lambda child: partners_shipping.append(child), children)
         
-        # get countries and states
+        # get categories, titles, countries and states
+        title_ids = title_obj.search(cr, SUPERUSER_ID, [], context=context)
         country_ids = country_obj.search(cr, SUPERUSER_ID, [], context=context)
         states_ids = state_obj.search(cr, SUPERUSER_ID, [], context=context)
+        category_ids = category_obj.search(cr, SUPERUSER_ID, [], context=context)
         
-        countries = country_obj.browse(cr, SUPERUSER_ID, country_ids, context)
-        states = state_obj.browse(cr, SUPERUSER_ID, states_ids, context)
+        titles = title_obj.browse(cr, SUPERUSER_ID, title_ids, context=context)
+        countries = country_obj.browse(cr, SUPERUSER_ID, country_ids, context=context)
+        states = state_obj.browse(cr, SUPERUSER_ID, states_ids, context=context)
+        categories = category_obj.browse(cr, SUPERUSER_ID, category_ids, context=context)
 
         return {
+            'titles': titles,
             'countries': countries,
             'states': states,
-            'address_billing': address_billing,
-            'addresses_shipping': addresses_shipping,
+            'categories': categories,
+            
+            'partner_billing': partner_billing,
+            'partners_shipping': partners_shipping,
         }
     
     @tools.require_login
@@ -159,7 +154,7 @@ class IpMyAccount(http.Controller):
         The shipping addresses can be that of the partner, and any of the partners who share 
         the same parent_id. 
         """
-        vals = self.get_addresses()
+        vals = self.get_address_partners()
         return request.website.render("ip_web_addons.address", vals)
     
     @tools.require_login
@@ -171,19 +166,21 @@ class IpMyAccount(http.Controller):
         The shipping addresses can be that of the partner, and any of the partners who share 
         the same parent_id. 
         """
-        vals = self.get_addresses()
+        vals = self.get_address_partners()
         return request.website.render("ip_web_addons.address_edit", vals)
     
     @tools.require_login_jsend
     @jsend.jsend_error_catcher
     @http.route(['/account/address/update'], type='http', methods=['POST'], auth="public", multilang=True, website=True)
-    def update_address(self, name, street, street2, city, zip, state_id, country_id, id):
+    def update_address(self, name, title, gender, birthdate, category_id, street, street2, city, zip, state_id, country_id, id):
         """ JSON route to update the address fields on a partner """
+        # check partner exists
         if not tools.isnumeric(id):
             return jsend.jsend_fail({'id': 'Partner ID must be a number'})
         else:
             id = int(id)
-            
+        
+        # make some text fields mandatory
         if not name:
             return jsend.jsend_fail({'name': 'Name is a required field'})    
         if not street:
@@ -193,6 +190,23 @@ class IpMyAccount(http.Controller):
         if not country_id:
             return jsend.jsend_fail({'country_id': 'Country is a required field'})
         
+        # validate birthdate format
+        if birthdate:
+            try:
+                datetime.strptime(birthdate, '%Y-%m-%d')
+            except ValueError:
+                return jsend.jsend_fail({'birthdate': 'Date of Birth should be in the format YYYY-MM-DD'})
+            
+        # validate select2
+        if category_id:
+            if ',' in category_id:
+                category_id = category_id.split(',')
+                category_id = map(lambda category: int(category), category_id)
+            elif tools.isnumeric(category_id):
+                category_id = [int(category_id)]
+            else:
+                return jsend.jsend_fail({'category_id', 'There was a problem with the category_id field'})
+            
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
         partner_obj = pool['res.partner']
         partner_id = id
@@ -204,6 +218,10 @@ class IpMyAccount(http.Controller):
         
         vals = {
             'name': name,
+            'title': title,
+            'gender': gender,
+            'birthdate': birthdate,
+            'category_id': [(6, 0, category_id)],
             'street': street,
             'street2': street2,
             'city': city,

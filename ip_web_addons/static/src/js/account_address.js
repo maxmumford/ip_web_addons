@@ -4,6 +4,11 @@ $(document).ready(function () {
 		var form = $(this).closest('form');
 		var data = form.serializeObject();
 
+		// fix select2
+		data.category_id = form.find('select[name=category_id]').val();
+		if(Array.isArray(data.category_id))
+			data.category_id = data.category_id.join();
+
     	$.ajax({
 		    url: "/account/address/update",
             dataType: 'JSON',
@@ -21,5 +26,7 @@ $(document).ready(function () {
 
 		});
 	});
+
+	$('.select2').select2();
  	
 });
