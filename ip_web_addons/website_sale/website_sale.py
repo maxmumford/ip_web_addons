@@ -104,7 +104,6 @@ class Ecommerce(http.Controller):
 			
 		order.write(vals)
 		
-	@tools.require_login_jsend
 	@jsend.jsend_error_catcher
 	@http.route(['/shop/get_auto_ship/'], type='http', auth="public", website=True, multilang=True)
 	def get_auto_ship(self):

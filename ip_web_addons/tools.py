@@ -33,7 +33,7 @@ def require_login_jsend(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
         if not _is_logged_in():
-            return jsend.jsend_fail({'login', 'The user is not logged in'})
+            return jsend.jsend_fail({'login': 'The user is not logged in'})
         else:
             return func(*args, **kwargs)
     return wrapped
