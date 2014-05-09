@@ -125,7 +125,6 @@ class Ecommerce(http.Controller):
 									'end_date': end_date,
 								})
 	
-	@tools.require_login_jsend
 	@jsend.jsend_error_catcher
 	@http.route(['/shop/can_auto_ship/'], type='http', auth="public", website=True, multilang=True)
 	def can_auto_ship(self):
@@ -133,18 +132,13 @@ class Ecommerce(http.Controller):
 		Returns data {'can_auto_ship': 'true'/'false'} 
 		"""
 		order = request.registry['website'].ecommerce_get_current_order(request.cr, request.uid, context=request.context)
-		try:
-			res = 'true' if self._can_auto_ship(order) else 'false'
-			return jsend.jsend_success({'can_auto_ship': res})
-		except ValueError as e:
-			if e.message == self.NO_ORDER:
-				return jsend.jsend_fail({'order': 'Customer has no current orders'})
-			raise
+		res = 'true' if self._can_auto_ship(order) else 'false'
+		return jsend.jsend_success({'can_auto_ship': res})
 	
 	def _can_auto_ship(self, order):
 		""" Returns True of all products in order lines are auto shippable """
 		if not order:
-			raise ValueError(self.NO_ORDER)
+			return True
 		for line in order.order_line:
 			if not line.product_id.auto_ship:
 				return False
