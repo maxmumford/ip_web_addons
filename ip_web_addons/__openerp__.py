@@ -27,6 +27,7 @@ Also show quantity widget when adding products to basket
         'models/auto_ship/views/auto_ship.xml',
         'models/auto_ship/views/sale_order.xml',
         'models/auto_ship/views/partner.xml',
+        'models/diseases/views/partner.xml',
         'models/auto_ship/views/product.xml',
     ],
     'installable': True,
