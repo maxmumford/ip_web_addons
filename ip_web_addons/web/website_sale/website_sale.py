@@ -1,4 +1,4 @@
-from .. import jsend, tools
+from openerp.addons.ip_web_addons import jsend, tools
 
 from openerp.addons.web import http
 from openerp.addons.web.http import request

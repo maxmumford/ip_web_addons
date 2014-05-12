@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
-from .. import jsend, tools
+from openerp.addons.ip_web_addons import jsend, tools
 from datetime import datetime
 
 from openerp import SUPERUSER_ID
