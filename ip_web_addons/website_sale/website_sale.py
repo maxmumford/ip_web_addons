@@ -65,7 +65,6 @@ class Ecommerce(http.Controller):
 		}
 		return jsend.jsend_success(vals)
 	
-	@tools.require_login_jsend
 	@jsend.jsend_error_catcher
 	@http.route(['/shop/set_auto_ship/'], type='http', auth="public", methods=['POST'], website=True, multilang=True)
 	def set_auto_ship(self, auto_ship, interval=0, end_date=None):
