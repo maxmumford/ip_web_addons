@@ -155,11 +155,11 @@
                         <tr>
                             <td>Diseases</td>
                             <td>
-                                <select multiple="true" class="select2" name="category_id" style="width: 400px">
-                                    <t t-foreach="categories or []" t-as="category">
-                                        <option t-att-value="category.id" 
-                                                t-att-selected="category.id in [categ.id for categ in partner.category_id]">
-                                            <t t-esc="category.name" />
+                                <select multiple="true" class="select2" name="disease_ids" style="width: 400px">
+                                    <t t-foreach="diseases or []" t-as="disease">
+                                        <option t-att-value="disease.id" 
+                                                t-att-selected="disease.id in [d.id for d in partner.disease_ids]">
+                                            <t t-esc="disease.name" />
                                         </option>
                                     </t>
                                 </select>

@@ -6,8 +6,8 @@ $(document).ready(function () {
 
 		// fix select2
 		data.disease_ids = form.find('select[name=disease_ids]').val();
-		if(Array.isArray(data.disease_ids))
-			data.disease_ids = data.disease_ids.join();
+		if(Array.isArray(data.category_id))
+			data.category_id = data.category_id.join();
 
     	$.ajax({
 		    url: "/account/address/update",

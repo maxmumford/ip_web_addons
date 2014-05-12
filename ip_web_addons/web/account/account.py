@@ -100,7 +100,7 @@ class IpMyAccount(http.Controller):
         country_obj = pool['res.country']
         state_obj = pool['res.country.state']
         title_obj = pool['res.partner.title']
-        category_obj = pool['res.partner.category']
+        disease_obj = pool['ip.disease']
 
         # get customer from logged in user
         user = user_obj.browse(cr, SUPERUSER_ID, uid, context=context)
@@ -124,22 +124,22 @@ class IpMyAccount(http.Controller):
         partner_billing = partner
         map(lambda child: partners_shipping.append(child), children)
         
-        # get categories, titles, countries and states
+        # get diseases, titles, countries and states
         title_ids = title_obj.search(cr, SUPERUSER_ID, [], context=context)
         country_ids = country_obj.search(cr, SUPERUSER_ID, [], context=context)
         states_ids = state_obj.search(cr, SUPERUSER_ID, [], context=context)
-        category_ids = category_obj.search(cr, SUPERUSER_ID, [], context=context)
+        disease_ids = disease_obj.search(cr, SUPERUSER_ID, [], context=context)
         
         titles = title_obj.browse(cr, SUPERUSER_ID, title_ids, context=context)
         countries = country_obj.browse(cr, SUPERUSER_ID, country_ids, context=context)
         states = state_obj.browse(cr, SUPERUSER_ID, states_ids, context=context)
-        categories = category_obj.browse(cr, SUPERUSER_ID, category_ids, context=context)
+        diseases = disease_obj.browse(cr, SUPERUSER_ID, disease_ids, context=context)
 
         return {
             'titles': titles,
             'countries': countries,
             'states': states,
-            'categories': categories,
+            'diseases': diseases,
             
             'partner_billing': partner_billing,
             'partners_shipping': partners_shipping,
@@ -172,7 +172,7 @@ class IpMyAccount(http.Controller):
     @tools.require_login_jsend
     @jsend.jsend_error_catcher
     @http.route(['/account/address/update'], type='http', methods=['POST'], auth="public", multilang=True, website=True)
-    def update_address(self, name, title, gender, birthdate, category_id, street, street2, city, zip, state_id, country_id, id):
+    def update_address(self, name, title, gender, birthdate, disease_ids, street, street2, city, zip, state_id, country_id, id):
         """ JSON route to update the address fields on a partner """
         # check partner exists
         if not tools.isnumeric(id):
@@ -198,14 +198,14 @@ class IpMyAccount(http.Controller):
                 return jsend.jsend_fail({'birthdate': 'Date of Birth should be in the format YYYY-MM-DD'})
             
         # validate select2
-        if category_id:
-            if ',' in category_id:
-                category_id = category_id.split(',')
-                category_id = map(lambda category: int(category), category_id)
-            elif tools.isnumeric(category_id):
-                category_id = [int(category_id)]
+        if disease_ids:
+            if ',' in disease_ids:
+                disease_ids = disease_ids.split(',')
+                disease_ids = map(lambda disease: int(disease), disease_ids)
+            elif tools.isnumeric(disease_ids):
+                disease_ids = [int(disease_ids)]
             else:
-                return jsend.jsend_fail({'category_id', 'There was a problem with the category_id field'})
+                return jsend.jsend_fail({'disease_ids', 'There was a problem with the disease_ids field'})
             
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
         partner_obj = pool['res.partner']
@@ -221,7 +221,7 @@ class IpMyAccount(http.Controller):
             'title': title,
             'gender': gender,
             'birthdate': birthdate,
-            'category_id': [(6, 0, category_id)],
+            'disease_ids': [(6, 0, disease_ids)],
             'street': street,
             'street2': street2,
             'city': city,
