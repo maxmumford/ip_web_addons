@@ -18,12 +18,11 @@ class IpPortalReports(http.Controller):
         
         assert isinstance(rec_id, (long, int)), _('ID must be float or int')
         assert pool.get(model), _('Could not find model "%s"') % model
-        assert pool[model].search(cr, uid, [('id', '=', rec_id)])
+        assert pool[model].search(cr, SUPERUSER_ID, [('id', '=', rec_id)])
 
         report_obj = pool['ir.actions.report.xml']
         report_data = {'report_type': 'pdf', 'model': model}
 
-        report_contents, report_extension = report_obj\
-            .render_report(cr, uid, [rec_id], report_name, report_data)
+        report_contents, report_extension = report_obj.render_report(cr, SUPERUSER_ID, [rec_id], report_name, report_data)
         return request.make_response(report_contents, 
             headers=[('Content-Type', 'application/pdf'), ('Content-Disposition', 'inline; filename=%s.pdf' % 'download')])
