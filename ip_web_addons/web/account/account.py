@@ -172,7 +172,7 @@ class IpMyAccount(http.Controller):
     @tools.require_login_jsend
     @jsend.jsend_error_catcher
     @http.route(['/account/address/update'], type='http', methods=['POST'], auth="public", multilang=True, website=True)
-    def update_address(self, name, title, gender, birthdate, disease_ids, street, street2, city, zip, state_id, country_id, id):
+    def update_address(self, name, title, gender, birthdate, disease_ids, phone, street, street2, city, zip, state_id, country_id, id):
         """ JSON route to update the address fields on a partner """
         fail_check = jsend.FailCheck()
         
@@ -226,6 +226,7 @@ class IpMyAccount(http.Controller):
             'title': title,
             'gender': gender,
             'birthdate': birthdate,
+            'phone': phone,
             'disease_ids': [(6, 0, disease_ids)],
             'street': street,
             'street2': street2,

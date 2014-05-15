@@ -76,6 +76,10 @@
                         <td><t t-esc="partner.gender" /></td>
                     </tr>
                     <tr>
+                        <td>Phone</td>
+                        <td><t t-esc="partner.phone" /></td>
+                    </tr>
+                    <tr>
                         <td>Street</td>
                         <td><t t-esc="partner.street" /></td>
                     </tr>
@@ -164,6 +168,10 @@
                                     </t>
                                 </select>
                             </td>
+                        </tr>
+                        <tr>
+                            <td>Phone</td>
+                            <td><input type="text" name="phone" t-att-value="partner.phone" /></td>
                         </tr>
                         <tr>
                             <td colspan="2"><hr /></td>
