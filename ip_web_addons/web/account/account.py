@@ -174,28 +174,30 @@ class IpMyAccount(http.Controller):
     @http.route(['/account/address/update'], type='http', methods=['POST'], auth="public", multilang=True, website=True)
     def update_address(self, name, title, gender, birthdate, disease_ids, street, street2, city, zip, state_id, country_id, id):
         """ JSON route to update the address fields on a partner """
+        fail_check = jsend.FailCheck()
+        
         # check partner exists
         if not tools.isnumeric(id):
-            return jsend.jsend_fail({'id': 'Partner ID must be a number'})
+            fail_check.add('id', 'Partner ID must be a number')
         else:
             id = int(id)
         
         # make some text fields mandatory
         if not name:
-            return jsend.jsend_fail({'name': 'Name is a required field'})    
+            fail_check.add('name', 'Name is a required field')
         if not street:
-            return jsend.jsend_fail({'street': 'Street is a required field'})    
+            fail_check.add('street', 'Street is a required field')
         if not city:
-            return jsend.jsend_fail({'city': 'City is a required field'})
+            fail_check.add('city', 'City is a required field')
         if not country_id:
-            return jsend.jsend_fail({'country_id': 'Country is a required field'})
+            fail_check.add('country_id', 'Country is a required field')
         
         # validate birthdate format
         if birthdate:
             try:
                 datetime.strptime(birthdate, '%Y-%m-%d')
             except ValueError:
-                return jsend.jsend_fail({'birthdate': 'Date of Birth should be in the format YYYY-MM-DD'})
+                fail_check.add('birthdate', 'Date of Birth should be in the format YYYY-MM-DD')
             
         # validate select2
         if disease_ids:
@@ -205,7 +207,7 @@ class IpMyAccount(http.Controller):
             elif tools.isnumeric(disease_ids):
                 disease_ids = [int(disease_ids)]
             else:
-                return jsend.jsend_fail({'disease_ids', 'There was a problem with the disease_ids field'})
+                fail_check.add('disease_ids', 'There was a problem with the disease_ids field')
             
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
         partner_obj = pool['res.partner']
@@ -214,8 +216,11 @@ class IpMyAccount(http.Controller):
         partner_exists = bool(partner_obj.search(cr, SUPERUSER_ID, [('id', '=', partner_id)], context=context))
         
         if not partner_exists:
-            return jsend.jsend_fail({'partner_id', 'That partner does not exist'})
+            fail_check.add('partner_id', 'That partner does not exist')
         
+        if(fail_check.failed()):
+            return fail_check.fail()
+
         vals = {
             'name': name,
             'title': title,
@@ -236,20 +241,29 @@ class IpMyAccount(http.Controller):
     @http.route(['/account/auto-ship/update/<int:auto_ship_id>'], type='http', auth="public", multilang=True, website=True)
     def update_auto_ship(self, auto_ship_id, interval, end_date, **post):
         """ Update an auto ship's interval and end date """
+        fail_check = jsend.FailCheck()
+        
         if not isinstance(auto_ship_id, (int, float)):
-            raise jsend.JsendTypeError("auto_ship_id", "Auto ship ID should be a number")
+            fail_check.add("auto_ship_id", "Auto ship ID should be a number")
         if not auto_ship_id:
-            raise jsend.JsendValueError("auto_ship_id", "Auto ship ID must be greater than 0")
+            fail_check.add("auto_ship_id", "Auto ship ID must be greater than 0")
         
         if not tools.isnumeric(interval):
-            raise jsend.JsendTypeError("interval", "Interval should be a number")
+            fail_check.add("interval", "Interval should be a number")
         if not interval:
-            raise jsend.JsendValueError("interval", "Interval should be greater than 0") 
+            fail_check.add("interval", "Interval should be greater than 0") 
          
         if not isinstance(end_date, (str, unicode)):
-            raise jsend.JsendTypeError("end_date", "End Date was invalid")
+            fail_check.add("end_date", "End Date was invalid")
         if not end_date:
-            raise jsend.JsendValueError("end_date", "End Date is required")  
+            fail_check.add("end_date", "End Date is required")  
+        try:
+            datetime.strptime(end_date, '%Y-%m-%d')
+        except ValueError:
+            fail_check.add("end_date", "End Date must be in the format YYYY-MM-DD")
+
+        if(fail_check.failed()):
+            return fail_check.fail()
         
         cr, uid, pool = request.cr, request.uid, request.registry
         # TODO: do we need to check permission?
@@ -257,15 +271,22 @@ class IpMyAccount(http.Controller):
     
     @tools.require_login_jsend
     @jsend.jsend_error_catcher
-    @http.route(['/account/auto-ship/delete/auto_ship_id'], type='http', auth="public", multilang=True, website=True)
+    @http.route(['/account/auto-ship/delete/<auto_ship_id>'], type='http', auth="public", multilang=True, website=True)
     def delete_auto_ship(self, auto_ship_id, **post):
         """ delete an auto ship """
-        if not tools.isnumeric(auto_ship_id):
-            raise jsend.JsendTypeError("auto_ship_id", "Auto ship ID should be a number")
-        if not auto_ship_id:
-            raise jsend.JsendValueError("auto_ship_id", "Auto ship ID should be greater than 0")
-        
+        fail_check = jsend.FailCheck()
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        
+        if not tools.isnumeric(auto_ship_id):
+            fail_check.add("auto_ship_id", "Auto ship ID should be a number")
+        elif not auto_ship_id:
+            fail_check.add("auto_ship_id", "Auto ship ID should be greater than 0")
+        elif not pool['ip.auto_ship'].search(cr, uid, [('id', '=', auto_ship_id)]):
+            fail_check.add("auto_ship_id", "Auto Ship does not exist")
+            
+        if fail_check.failed():
+            return fail_check.fail()
+        
         # TODO: do we need to check permission?
         pool['ip.auto_ship'].unlink(cr, uid, auto_ship_id, context=context)
         
@@ -274,16 +295,23 @@ class IpMyAccount(http.Controller):
     @http.route(['/account/number-remaining/<interval>/<end_date>'], type='http', auth="public", multilang=True, website=True)
     def number_remaining(self, interval, end_date, **post):
         """ Return the number of auto shipments remaining based on end_date and interval """
+        fail_check = jsend.FailCheck()
+        
         if not tools.isnumeric(interval):
-            raise jsend.JsendTypeError("interval", "Interval should be a number")
+            fail_check.add("interval", "Interval should be a number")
         if not interval:
-            raise jsend.JsendValueError("interval", "Interval should be greater than 0")  
+            fail_check.add("interval", "Interval should be greater than 0")  
         if not isinstance(end_date, (str, unicode)):
-            raise jsend.JsendTypeError("end_date", "End Date was invalid")
+            fail_check.add("end_date", "End Date was invalid")
         if not end_date:
-            raise jsend.JsendValueError("end_date", "End Date is required")  
+            fail_check.add("end_date", "End Date is required")  
         try:
-            nr = str(request.registry['ip.auto_ship']._calculate_number_remaining(float(interval), end_date))
-            return jsend.jsend_success({'number_remaining': nr})
-        except ValueError as e:
-            raise jsend.JsendValueError("end_date", "End Date must be a valid date in YYYY-MM-DD format")
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        except ValueError:
+            fail_check.add("end_date", "End Date must be a valid date in YYYY-MM-DD format")
+
+        if fail_check.failed():
+            return fail_check.fail()
+
+        nr = str(request.registry['ip.auto_ship']._calculate_number_remaining(float(interval), end_date))
+        return jsend.jsend_success({'number_remaining': nr})

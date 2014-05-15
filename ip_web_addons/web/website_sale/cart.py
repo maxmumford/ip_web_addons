@@ -15,15 +15,20 @@ class Ecommerce(http.Controller):
 		Add multiple products to the cart with specified quantities
 		@param dict product_quantity_map: A dictionary keyed by product IDs where values represent quantities 
 		"""
+		fail_check = jsend.FailCheck()
+		
 		if not hasattr(product_quantity_map, '__iter__'):
-			raise jsend.JsendTypeError('product_quantity_map', 'product_quantity_map should be a json object mapping product IDs to quantities to add to the cart')
+			fail_check.add('product_quantity_map', 'product_quantity_map should be a json object mapping product IDs to quantities to add to the cart')
 		
 		for product_id, quantity in product_quantity_map.items():
 			# data validation
 			if not tools.isnumeric(product_id):
-				raise jsend.JsendTypeError('product_id', 'Product IDS must be numeric')
+				fail_check.add('product_id', 'Product IDS must be numeric')
 			if not tools.isnumeric(quantity):
-				raise jsend.JsendTypeError('quantity', 'Quantity must be numeric') 
+				fail_check.add('quantity', 'Quantity must be numeric') 
+
+			if fail_check.failed():
+				return fail_check.fail()
 			
 			product_id = int(product_id)
 			quantity = float(quantity)

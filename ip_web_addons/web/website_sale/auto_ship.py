@@ -16,27 +16,38 @@ class Ecommerce(http.Controller):
 		"""
 		Saves onto customers quotation the auto_ship setting and if 'true', also sets associated interval and end_date.
 		"""
+		fail_check = jsend.FailCheck()
+
 		# must have auto shippable order
 		order = request.registry['website'].ecommerce_get_current_order(request.cr, request.uid, context=request.context)
 		if not order:
-			return jsend.jsend_fail({'order': 'Customer has no orders in progress'})
+			fail_check.add('order', 'Customer has no orders in progress')
 		if not self._can_auto_ship(order):
-			return jsend.jsend_fail({'auto_ship': 'Not all products in the cart are marked as Auto Ship'})
+			fail_check.add('auto_ship', 'Not all products in the cart are marked as Auto Ship')
 		if not tools.isnumeric(interval):
-			raise jsend.JsendTypeError('interval', 'Interval must be numeric')
+			fail_check.add('interval', 'Interval must be numeric')
 		
+		if fail_check.failed():
+			return fail_check.fail()
+
 		# set auto ship variables on sale order
 		auto_ship = True if auto_ship == 'true' else False
 		interval = int(interval)
 		vals = {}
 		
 		if auto_ship:
+			if not interval:
+				fail_check.add('interval', 'Interval has to be 1 week or higher')
 			if not end_date:
-				return jsend.jsend_fail({'end_date', 'End Date must have a value'})
-			try:
-				end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-			except ValueError:
-				raise jsend.JsendValueError('end_date', 'End Date was not a valid date - it must be in format YYYY-MM-DD')
+				fail_check.add('end_date', 'End Date must have a value')
+			else:
+				try:
+					end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+				except ValueError:
+					fail_check.add('end_date', 'End Date was not a valid date - it must be in format YYYY-MM-DD')
+
+			if fail_check.failed():
+				return fail_check.fail()
 			
 			vals['draft_auto_ship'] = auto_ship
 			vals['draft_auto_ship_interval'] = interval
@@ -57,7 +68,7 @@ class Ecommerce(http.Controller):
 		# get auto ship settings from the session
 		order = request.registry['website'].ecommerce_get_current_order(request.cr, request.uid, context=request.context)
 		if not order:
-			return jsend.jsend_fail({'order': 'Customer has no current orders'})
+			return jsend.jsend_fail({'order', 'Customer has no current orders'})
 		
 		auto_ship = 'true' if order.draft_auto_ship else 'false'
 		interval = order.draft_auto_ship_interval

@@ -86,3 +86,19 @@ class JsendTypeError(JsendValueError):
     and the field and message parameters will be used to generate a jsend_fail response 
     """
     pass
+
+class FailCheck(object):
+    """ Used to return a jsend_fail with multiple errors all at once """
+    def __init__(self):
+        super(FailCheck, self).__init__()
+        self.fails = {}
+    
+    def add(self, field, description):
+        self.fails[field] = description
+        
+    def failed(self):
+        return bool(self.fails)
+        
+    def fail(self):
+        if(self.failed()):
+            return jsend_fail(self.fails)
