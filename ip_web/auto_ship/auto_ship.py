@@ -3,6 +3,7 @@ import math
 from openerp.osv import osv, fields
 from datetime import datetime, date, timedelta
 from openerp.tools.translate import _
+from openerp import pooler
 
 class auto_ship(osv.osv):
 
@@ -109,6 +110,8 @@ class auto_ship(osv.osv):
 		"interval": fields.integer("Interval In Weeks", help="If auto_ship is true, this sales order will be resent every INTERVAL weeks"),
 		"end_date": fields.date("Auto Ship End Date", help="The date that the Auto Ship expires"),
 		"sale_order_ids": fields.one2many("sale.order", "auto_ship_id", "Sale Orders", help="Sale Orders created by this Auto Ship", readonly=True),
+		"error": fields.boolean("Error", help="Error will be true if there was a problem while processing the Auto Ship"),
+		"error_messages": fields.text("error_messages", readonly=True),
 		"latest_sale_order": fields.function(
 									_func_latest_sale_order,
 									method = True,
@@ -187,10 +190,11 @@ class auto_ship(osv.osv):
 			('expired', '=', False),
 		])
 
-		# for each one call process_auto_ship
+		# for each one get new cursor and call process_auto_ship
 		for auto_ship_id in auto_ship_ids:
-			self.process_auto_ship(cr, uid, auto_ship_id)
-			
+			new_cr = pooler.get_db(cr.dbname).cursor()
+			self.process_auto_ship(new_cr, uid, auto_ship_id)
+			new_cr.close()
 		return True
 
 	def process_auto_ship(self, cr, uid, auto_ship_id, context=None):
@@ -202,12 +206,28 @@ class auto_ship(osv.osv):
 		if auto_ship.expired or not auto_ship.valid_products:
 			return False
 
-		# Duplicate latest sale order and confirm it
-		sale_obj = self.pool['sale.order']
-		new_so_id = sale_obj.copy(cr, uid, auto_ship.latest_sale_order.id, context=context)
-		sale_obj.action_button_confirm(cr, uid, [new_so_id], context=context)
-
-		return new_so_id
+		# Duplicate latest sale order and confirm it. 
+		# If there is an error, save it to error_messages and set error to true, 
+		# otherwise clear error fields
+		try:
+			sale_obj = self.pool['sale.order']
+			new_so_id = sale_obj.copy(cr, uid, auto_ship.latest_sale_order.id, context=context)
+			sale_obj.action_button_confirm(cr, uid, [new_so_id], context=context)
+			
+			auto_ship.write({'error': False, 'error_messages': ''})
+			return new_so_id
+		
+		except Exception as e:
+			# invalidate cursor, get new cursor, save error messages
+			cr.rollback()
+			cr_new = pooler.get_db(cr.dbname).cursor()
+			
+			error_messages = auto_ship.error_messages or ''
+			error_messages += '\n%s: %s' % (type(e).__name__, unicode(e))
+			self.write(cr_new, uid, auto_ship_id, {'error': True, 'error_messages': error_messages})
+			
+			cr_new.close()
+			return False
 	
 	# Private methods
 	def _calculate_next_auto_ship_date(self, base_date, interval, return_type = date):
