@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<openerp>
+    <data noupdate="0">
+
+        <record id="portal.partner_demo_portal" model="res.partner">
+            <field name="city"></field>
+            <field name="zip"></field>
+            <field name="street"></field>
+            <field name="country_id" ref=""></field>
+        </record>
+
+    </data>
+</openerp>

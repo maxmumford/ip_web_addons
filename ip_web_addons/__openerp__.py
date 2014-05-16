@@ -17,6 +17,7 @@ Also show quantity widget when adding products to basket
     'data': [
         'models/auto_ship/data/cron.xml',
         'web/account/data/menus.xml',
+        'web/account/data/users.xml',
         
         'models/auto_ship/data/menus.xml', 
         'models/auto_ship/data/sequence.xml',
