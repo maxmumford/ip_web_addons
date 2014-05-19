@@ -68,7 +68,7 @@ class Ecommerce(http.Controller):
 		# get auto ship settings from the session
 		order = request.registry['website'].ecommerce_get_current_order(request.cr, request.uid, context=request.context)
 		if not order:
-			return jsend.jsend_fail({'order', 'Customer has no current orders'})
+			return jsend.jsend_fail({'order': 'Customer has no current orders'})
 		
 		auto_ship = 'true' if order.draft_auto_ship else 'false'
 		interval = order.draft_auto_ship_interval
