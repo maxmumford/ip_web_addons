@@ -18,7 +18,7 @@ class IpMyAccount(http.Controller):
         user_obj = pool['res.users']
         invoices_obj = pool['account.invoice']
         sale_obj = pool['sale.order']
-        auto_ship_obj = pool['ip.auto_ship']
+        auto_ship_obj = pool['ip_web_addons.auto_ship']
         delivery_obj = pool['stock.picking.out']
         incoming_obj = pool['stock.picking.in']
         payment_obj = pool['payment.transaction']
@@ -100,7 +100,7 @@ class IpMyAccount(http.Controller):
         country_obj = pool['res.country']
         state_obj = pool['res.country.state']
         title_obj = pool['res.partner.title']
-        disease_obj = pool['ip.disease']
+        disease_obj = pool['ip_web_addons.disease']
 
         # get customer from logged in user
         user = user_obj.browse(cr, SUPERUSER_ID, uid, context=context)
@@ -268,7 +268,7 @@ class IpMyAccount(http.Controller):
         
         cr, uid, pool = request.cr, request.uid, request.registry
         # TODO: do we need to check permission?
-        pool['ip.auto_ship'].write(cr, uid, auto_ship_id, {'interval': interval, 'end_date': end_date})
+        pool['ip_web_addons.auto_ship'].write(cr, uid, auto_ship_id, {'interval': interval, 'end_date': end_date})
     
     @tools.require_login_jsend
     @jsend.jsend_error_catcher
@@ -282,14 +282,14 @@ class IpMyAccount(http.Controller):
             fail_check.add("auto_ship_id", "Auto ship ID should be a number")
         elif not auto_ship_id:
             fail_check.add("auto_ship_id", "Auto ship ID should be greater than 0")
-        elif not pool['ip.auto_ship'].search(cr, uid, [('id', '=', auto_ship_id)]):
+        elif not pool['ip_web_addons.auto_ship'].search(cr, uid, [('id', '=', auto_ship_id)]):
             fail_check.add("auto_ship_id", "Auto Ship does not exist")
             
         if fail_check.failed():
             return fail_check.fail()
         
         # TODO: do we need to check permission?
-        pool['ip.auto_ship'].unlink(cr, uid, auto_ship_id, context=context)
+        pool['ip_web_addons.auto_ship'].unlink(cr, uid, auto_ship_id, context=context)
         
     @tools.require_login_jsend
     @jsend.jsend_error_catcher
@@ -314,5 +314,5 @@ class IpMyAccount(http.Controller):
         if fail_check.failed():
             return fail_check.fail()
 
-        nr = str(request.registry['ip.auto_ship']._calculate_number_remaining(float(interval), end_date))
+        nr = str(request.registry['ip_web_addons.auto_ship']._calculate_number_remaining(float(interval), end_date))
         return jsend.jsend_success({'number_remaining': nr})

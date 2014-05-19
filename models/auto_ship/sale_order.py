@@ -9,7 +9,7 @@ class sale_order(osv.osv):
 	_inherit = "sale.order"
 
 	_columns = {
-		"auto_ship_id": fields.many2one("ip.auto_ship", "Auto Ship"),
+		"auto_ship_id": fields.many2one("ip_web_addons.auto_ship", "Auto Ship"),
 		
 		'draft_auto_ship': fields.boolean('To Create Auto Ship?', help="Indicates whether or not an Auto Ship should be created when this sale order is confirmed"),
 		'draft_auto_ship_interval': fields.integer('Auto Ship Interval', help="The interval of the auto ship to be created"),
@@ -44,7 +44,7 @@ class sale_order(osv.osv):
 		""" Create an auto ship for a sale order """
 		assert isinstance(so_id, (int, long)), _("so_id variable should be int or long")
 		
-		auto_ship_obj = self.pool['ip.auto_ship']
+		auto_ship_obj = self.pool['ip_web_addons.auto_ship']
 		so = self.browse(cr, uid, so_id)
 
 		# check no existing auto ship exists for this SO		

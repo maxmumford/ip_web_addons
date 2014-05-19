@@ -8,7 +8,7 @@
             <field name="interval_type">days</field>
             <field name="numbercall">-1</field>
             <field name="doall" eval="False" />
-            <field name="model" eval="'ip.auto_ship'" />
+            <field name="model" eval="'ip_web_addons.auto_ship'" />
             <field name="function" eval="'do_all_auto_ships'" />
             <field name="args" eval="'()'" />
         </record>

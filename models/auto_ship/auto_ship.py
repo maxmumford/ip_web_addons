@@ -7,7 +7,7 @@ from openerp import pooler
 
 class auto_ship(osv.osv):
 
-	_name = "ip.auto_ship"
+	_name = "ip_web_addons.auto_ship"
 
 	# functional field triggers
 	def next_ship_sale_order_trigger(self, cr, uid, ids, context=None):
@@ -15,12 +15,12 @@ class auto_ship(osv.osv):
 		return r
 	
 	_next_auto_ship_date_store_triggers = {
-		'ip.auto_ship': (lambda self, cr, uid, ids, context=None: ids, ['interval', 'end_date'], 5),
+		'ip_web_addons.auto_ship': (lambda self, cr, uid, ids, context=None: ids, ['interval', 'end_date'], 5),
 		'sale.order': (next_ship_sale_order_trigger, ['auto_ship_id'], 6),
 	}
 
 	_expired_store_triggers = {
-		'ip.auto_ship': (lambda self, cr, uid, ids, context=None: ids,
+		'ip_web_addons.auto_ship': (lambda self, cr, uid, ids, context=None: ids,
 			['interval', 'end_date', 'next_auto_ship_date'], 10)
 	}
 
@@ -152,7 +152,7 @@ class auto_ship(osv.osv):
 	}
 	
 	_defaults = {
-		'name': lambda obj, cr, uid, context: obj.pool['ir.sequence'].get(cr, uid, 'ip.auto_ship'),
+		'name': lambda obj, cr, uid, context: obj.pool['ir.sequence'].get(cr, uid, 'ip_web_addons.auto_ship'),
 		'sale_order_ids': None,
 		'latest_sale_order': None,
 		'next_auto_ship_date': None,
@@ -172,7 +172,7 @@ class auto_ship(osv.osv):
 			
 	def copy(self, cr, uid, as_id, default={}, context=None):
 		""" Get new 'name' value from sequence """
-		default['name'] = self.pool['ir.sequence'].get(cr, uid, 'ip.auto_ship')
+		default['name'] = self.pool['ir.sequence'].get(cr, uid, 'ip_web_addons.auto_ship')
 		default['sale_order_ids'] = None
 		default['latest_sale_order'] = None
 		default['next_auto_ship_date'] = None

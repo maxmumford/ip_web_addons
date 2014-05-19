@@ -3,8 +3,8 @@
     <data>
 
         <record id="ip_web_addons_auto_ship_form" model="ir.ui.view">
-            <field name="name">ip.auto_ship.form</field>
-            <field name="model">ip.auto_ship</field>
+            <field name="name">ip_web_addons.auto_ship.form</field>
+            <field name="model">ip_web_addons.auto_ship</field>
             <field name="arch" type="xml">
             	<form string="Auto Ship" version="7.0">	
             		<sheet>
@@ -33,8 +33,8 @@
         </record>
 
 		<record model="ir.ui.view" id="ip_web_addons_auto_ship_tree">
-		  	<field name="name">ip.auto_ship.tree</field>
-		  	<field name="model">ip.auto_ship</field>
+		  	<field name="name">ip_web_addons.auto_ship.tree</field>
+		  	<field name="model">ip_web_addons.auto_ship</field>
 		  	<field name="arch" type="xml">
 				<tree string="Stages" colors="red:error==True;">
                     <field name="name" />
