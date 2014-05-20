@@ -49,6 +49,13 @@ class IpMyAccount(http.Controller):
                 ('state', 'in', ['confirmed', 'assigned', 'done'])
             ], context=context)
         deliveries = delivery_obj.browse(cr, SUPERUSER_ID, delivery_ids, context=context)
+        
+        # get tracking numbers
+        tracking_numbers = {}
+        for delivery_order in deliveries:
+            tracking_numbers.setdefault(delivery_order.origin, [])
+            if delivery_order.carrier_tracking_ref:
+                tracking_numbers[delivery_order.origin] = tracking_numbers[delivery_order.origin] + delivery_order.carrier_tracking_ref.split(',')
 
         # get auto ships
         auto_ship_ids = auto_ship_obj.search(cr, SUPERUSER_ID, [
@@ -76,6 +83,7 @@ class IpMyAccount(http.Controller):
             'auto_ships': auto_ships,
             'transactions': transactions,
             'returns': returns,
+            'tracking_numbers': tracking_numbers,
          }
 
         return request.website.render("ip_web_addons.account", vals)
